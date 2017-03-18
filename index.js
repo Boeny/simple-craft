@@ -1,3 +1,7 @@
+function in_array(el,arr){
+return arr.indexOf(el) > -1;
+}
+
 
 function ho(o){
 var c = '';
@@ -15,20 +19,16 @@ if (o && typeof o != 'object') o =
 if (o && o['class']){
 	var cls = o['class'].split(' ');
 	var reg;
+	var classes = Object.keys(s);
 	for (var ic in cls){
-		if (ic)
+		ic = cls[ic];
+		if (ic && 
+!in_array(ic,classes))
 		for (var i in styles){
-			reg = new 
-RegExp(i);
-
-		if (ic.match(reg)){
-			reg = 
-		styles[i].replace(/$\d/g,
-'(.*)');
-			styles[ic] = 
-styles[i].replace(reg,s[i]);
-		}
-
+		reg = new RegExp(i,'g');
+		if (ic.match(reg))
+			s[ic] = 
+ic.replace(reg, styles[i]);
 		}
 	}
 }
@@ -43,7 +43,7 @@ var styles = {
 'b':'bottom:0',
 'r':'right:0',
 'l':'left:0',
-'m':'top:50%;margin:auto',
+'m':'top:50%;left:50%',
 'w_(.*)':'width:$1px',
 'h_(.*)':'height:$1px',
 'bk_(.*)':'background:$1',
@@ -57,8 +57,7 @@ var styles = {
 function style(){
 var c = '';
 for (var i in s){
-	if (i.indexOf('(') === -1)
-		c += '.'+i+'{'+s[i]+'}';
+	c += '.'+i+'{'+s[i]+'}';
 }
 return tag('style',c);
 }
@@ -70,6 +69,6 @@ if (p=='/favicon.ico')return;
 var h=div('hello','fix bk_red m w_50 h_50 \
 b');
 h = style()+h;
-__server.msg(h);
+__server.lmsg(h);
 r.end(h);
 };
