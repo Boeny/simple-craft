@@ -1,3 +1,4 @@
+var cells_count = 25;
 var Cell = function(selector){
 	this.DOM = $(selector);
 	this.html = h.div(this.DOM.html(), {'class': this.DOM[0].className});
@@ -53,6 +54,8 @@ function addCell(elem){
 	//c.Mutate();
 	c.growInterval = setInterval(function(){c.Grow()}, 100);
 	cells.push(c);
+	if (cells.length == 
+cells_count) stopGrow();
 }
 
 $(function(){
