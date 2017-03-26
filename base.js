@@ -112,7 +112,7 @@ global.swap_obj_fields = function(o, f1, f2){
  * @param {mixed(null)} def значение по умолчанию
  * @returns {object}
  */
-global.CheckObj = function(obj, key, def){
+global.check_obj = function(obj, key, def){
 	if (obj[key] === undefined)
 		obj[key] = (def === undefined) ? null : def;
 	
