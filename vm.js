@@ -1,5 +1,7 @@
-var App = function(elem){
+var App = function(elem,w,h){
 	this.c = new Canvas({elem: $(elem), render: true});
+	this.width = this.c.canvas.width = w || 300;
+	this.height = this.c.canvas.height = h || 300;
 };
 App.prototype = {
 	run: function(){
@@ -13,6 +15,9 @@ App.prototype = {
 		this.render();
 		this.afterRender();
 	},
+	stop: function(){
+		clearInterval(this.timer);
+	},
 	physics: function(){
 		
 	},
@@ -23,21 +28,44 @@ App.prototype = {
 	//--------------------------
 	
 	start: function(){
-		this.c.canvas.width = 640;
-		this.c.canvas.height = 480;
+		this.data = this.c.createData(this.width, this.height);
+		this.setRandomPoints(100);
+		this.apply();
+	},
+
+	setPoint: function(x,y, r,g,b,a){
+		this.x = x;
+		this.y = y;
+		this.color(r,g,b,a);
+	},
+
+	setRandomPoints: function(count){
+		this.points = [];
 		
-		this.data = this.c.createData(640, 480);
-		this.c.setColorAt(this.data, 100,100);
-		this.c.putData(this.data, 0, 0);
-		
-		console.log(this.c.canvas.width+', '+this.c.canvas.height);
-		//this.p = this.c.createPixel();
-		//this.c.putData(this.p, 100, 100);
+		iterate(count, () => {
+			this.x = random(1, this.width - 1);
+			this.y = random(1, this.height - 1);
+			this.points.push({
+				x: this.x,
+				y: this.y
+			});
+			this.color();
+		});
+	},
+
+	color: function(r,g,b,a){
+		this.c.setColorAt(this.data, this.x,this.y, r,g,b,a);
+	},
+	apply: function(){
+		this.c.putData(this.data, 0,0);
 	},
 	
 	update: function(){
-		//this.p.data[0] = 255;
-		//this.c.putData(this.p, 200, 200);
+		if (this.x >= this.width-1) this.stop();
+		this.color(0,0,0,0);
+		this.x++;
+		this.color();
+		this.apply();
 	},
 	
 	beforePhysics: function(){
@@ -56,7 +84,7 @@ App.prototype = {
 };
 
 $(function(){
-	var app = new App('#canvas');
+	var app = new App('#canvas',600,600);
 	app.start();
-	//setInterval(function(){app.run()}, 40);
+	//app.timer = setInterval(function(){app.run()}, 40);
 });

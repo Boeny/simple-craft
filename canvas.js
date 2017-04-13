@@ -15,22 +15,24 @@ module.exports.prototype = {
 	},
 	createPixel: function(r,g,b,a){
 		var p = this.createData(1, 1);
-		p.data[0] = r || 0;
-		p.data[1] = g || 0;
-		p.data[2] = b || 0;
-		p.data[3] = a || 255;
+		this.setColorAtIndex(p,0,r,g,b,a);
 		return p;
 	},
 	putData: function(data){
 		this.canvas.putImageData(data, 0, 0);
 	},
+
+	setColorAtIndex: function(p,i,r,g,b,a){
+		p.data[i] = r===undefined?0:r;
+		p.data[i+1] = g===undefined?0:g;
+		p.data[i+2] = b===undefined?0:b;
+		p.data[i+3] = a===undefined?255:a;
+	},
 	
 	setColorAt: function(p, x,y, r,g,b,a){
 		var i = x + y * this.canvas.width;
-		p.data[i] = r || 0;
-		p.data[i+1] = g || 0;
-		p.data[i+2] = b || 0;
-		p.data[i+3] = a || 255;
+		i *= 4;
+		this.setColorAtIndex(p,i,r,g,b,a);
 	},
 	
 	setColor: function(color){
