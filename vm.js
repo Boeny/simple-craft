@@ -1,63 +1,62 @@
-var cells_count = 25;
-var Cell = function(selector){
-	this.DOM = $(selector);
-	this.html = h.div(this.DOM.html(), {'class': this.DOM[0].className});
+var App = function(elem){
+	this.c = new Canvas({elem: $(elem), render: true});
 };
-Cell.prototype = {
-	max_width: 52,
-	getWidth: function(){
-		return this.DOM.width();
+App.prototype = {
+	run: function(){
+		this.update();
+		
+		this.beforePhysics();
+		this.physics();
+		this.afterPhysics();
+		
+		this.beforeRender();
+		this.render();
+		this.afterRender();
 	},
-	setWidth: function(w){
-		this.DOM.width(w);
+	physics: function(){
+		
+	},
+	render: function(){
+		
 	},
 	
-	Grow: function(){
-		var width = this.getWidth();
-		this.setWidth(width + 1);
+	//--------------------------
+	
+	start: function(){
+		this.c.canvas.width = 640;
+		this.c.canvas.height = 480;
 		
-		if (width > this.max_width*2){
-			this.setWidth(this.max_width);
-			
-			var elem = $(this.html);
-			this.DOM.after(elem);
-			addCell(elem);
-		}
+		this.data = this.c.createData(640, 480);
+		this.c.setColorAt(this.data, 100,100);
+		this.c.putData(this.data, 0, 0);
+		
+		console.log(this.c.canvas.width+', '+this.c.canvas.height);
+		//this.p = this.c.createPixel();
+		//this.c.putData(this.p, 100, 100);
 	},
-	Mutate: function(){
-		this.DOM.css({
-			background: 'rgb('+random(255)+','+random(255)+','+random(255)+')',
-			color: 'rgb('+random(255)+','+random(255)+','+random(255)+')',
-			display: ['block','inline-block'][random(1)],
-			'text-align': ['left','center','right'][random(2)],
-			'line-height': random(4)
-		});
+	
+	update: function(){
+		//this.p.data[0] = 255;
+		//this.c.putData(this.p, 200, 200);
+	},
+	
+	beforePhysics: function(){
+		
+	},
+	afterPhysics: function(){
+		
+	},
+	
+	beforeRender: function(){
+		
+	},
+	afterRender: function(){
+		
 	}
 };
 
-window.cells = [];
-
-function stopGrow(){
-	for (var i in cells){
-		clearInterval(cells[i].growInterval);
-	}
-}
-
-function initGrow(){
-	$('.app').children().each(function(){
-		addCell(this);
-	});
-}
-
-function addCell(elem){
-	var c = new Cell(elem);
-	//c.Mutate();
-	c.growInterval = setInterval(function(){c.Grow()}, 100);
-	cells.push(c);
-	if (cells.length == 
-cells_count) stopGrow();
-}
-
 $(function(){
-	initGrow();
+	var app = new App('#canvas');
+	app.start();
+	//setInterval(function(){app.run()}, 40);
 });
