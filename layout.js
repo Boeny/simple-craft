@@ -14,7 +14,8 @@ module.exports = function(content, response){
 				h.style()+
 				h.script({src: external})+
 				h.script(createModule('base'))+
-				h.script('var h = '+createModule('html'))
+				h.script('var h = '+createModule('html'))+
+				h.script('var Canvas = '+createModule('canvas'))
 			)+
 			h.body(content)
 		)
