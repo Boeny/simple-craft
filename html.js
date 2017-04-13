@@ -1,5 +1,6 @@
 var result_styles = {};
 var styles = {
+	'^app':'width:100%;height:100%',
 	'^abs':'position:absolute',
 	'^fix':'position:fixed',
 	'^top':'top:0',

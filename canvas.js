@@ -1,23 +1,38 @@
 module.exports = function(o){
-	this.canvas = $(o.elem)[0].getContext('2d');
-	this.canvas.params = o;
+	if (!is_object(o)) o = {elem: o};
+	o.elem = $(o.elem);
+	this.canvas = o.elem[0].getContext('2d');
+	//this.canvas.params = o;
 	
-	if (o.width) this.canvas.lineWidth = o.width;
-	this.setColor(o.color);
-	if (!o.render) this.canvas.beginPath();
+	//if (o.width) this.canvas.lineWidth = o.width;
+	//this.setColor(o.color);
+	//if (!o.render) this.canvas.beginPath();
 };
+
 module.exports.prototype = {
-	/**
-	 * x, y, 0-255
-	 */
-	doWithEachPixel: function(w,h,func){
-		var img = this.canvas.getImageData(0,0, w, h);
-		
-		for (var i in img.data){
-			img.data[i] = func(i % w, Math.floor(i/w), img.data[i]);
-		}
-		
-		this.canvas.putImageData(img,0,0);
+	createData: function(w,h){
+		return this.canvas.createImageData(w, h);
+	},
+	createPixel: function(r,g,b,a){
+		var p = this.createData(1, 1);
+		this.setColorAtIndex(p,0,r,g,b,a);
+		return p;
+	},
+	putData: function(data){
+		this.canvas.putImageData(data, 0, 0);
+	},
+
+	setColorAtIndex: function(p,i,r,g,b,a){
+		p.data[i] = r === undefined ? 0 : r;
+		p.data[i+1] = g === undefined ? 0 : g;
+		p.data[i+2] = b === undefined ? 0 : b;
+		p.data[i+3] = a === undefined ? 255 : a;
+	},
+	
+	setColorAt: function(p, x,y, r,g,b,a){
+		var i = x + y * this.canvas.width;
+		i *= 4;
+		this.setColorAtIndex(p,i,r,g,b,a);
 	},
 	
 	setColor: function(color){
