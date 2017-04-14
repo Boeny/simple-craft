@@ -29,15 +29,15 @@ App.prototype = {
 	//--------------------------
 	
 	start: function(){
-		this.data = this.c.createData(this.width, this.height);
-		//this.setPoint(this.width/2, this.height/2);
+		this.data = this.c.createData(640,480);
+		//this.setPoint(100,100);
 		this.setRandomPoints(100);
 		this.apply();
 	},
 
-	setPoint: function(x,y, r,g,b,a){
-		this.x = x;
-		this.y = y;
+	setPoint: function(_x,_y, r,g,b,a){
+		this.x = _x;
+		this.y = _y;
 		this.color(r,g,b,a);
 	},
 
@@ -45,12 +45,13 @@ App.prototype = {
 		this.points = [];
 		
 		iterate(count, () => {
-			this.x = random(1, this.width - 1);
-			this.y = random(1, this.height - 1);
+			this.x = random(639);
+			this.y = random(479);
 			this.points.push({
 				x: this.x,
 				y: this.y
 			});
+
 			this.color();
 		});
 	},
@@ -63,7 +64,7 @@ App.prototype = {
 	},
 	
 	update: function(){
-		if (this.x >= this.width-1) this.stop();
+		if (this.x >= 639) this.stop();
 		this.color(0,0,0,0);
 		this.x++;
 		this.color();

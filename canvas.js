@@ -2,7 +2,7 @@ module.exports = function(o){
 	if (!is_object(o)) o = {elem: o};
 	o.elem = $(o.elem);
 	this.canvas = o.elem[0].getContext('2d');
-	//this.canvas.params = o;
+	this.canvas.params = o;
 	
 	//if (o.width) this.canvas.lineWidth = o.width;
 	//this.setColor(o.color);
@@ -18,8 +18,8 @@ module.exports.prototype = {
 		this.setColorAtIndex(p,0,r,g,b,a);
 		return p;
 	},
-	putData: function(data){
-		this.canvas.putImageData(data, 0, 0);
+	putData: function(data, x,y){
+		this.canvas.putImageData(data, x||0, y||0);
 	},
 
 	setColorAtIndex: function(p,i,r,g,b,a){
