@@ -194,3 +194,9 @@ global.iterate = function(count, func){
 			break;
 	}
 };
+global.foreach = function(arr, func){
+	for (var i in arr){
+		if (func(arr[i], i) === false)
+			break;
+	}
+};

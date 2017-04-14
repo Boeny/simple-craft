@@ -1,39 +1,35 @@
-module.exports = function(o){
-	if (!is_object(o)) o = {elem: o};
-	o.elem = $(o.elem);
-	this.canvas = o.elem[0].getContext('2d');
-	this.canvas.params = o;
-	
-	//if (o.width) this.canvas.lineWidth = o.width;
-	//this.setColor(o.color);
-	//if (!o.render) this.canvas.beginPath();
+module.exports = function(elem){
+	this.DOM = $(elem)[0];
+	this.canvas = this.DOM.getContext('2d');
 };
 
 module.exports.prototype = {
 	createData: function(w,h){
-		return this.canvas.createImageData(w, h);
-	},
-	createPixel: function(r,g,b,a){
-		var p = this.createData(1, 1);
-		this.setColorAtIndex(p,0,r,g,b,a);
-		return p;
+		return this.canvas.createImageData(w,h);
 	},
 	putData: function(data, x,y){
-		this.canvas.putImageData(data, x||0, y||0);
+		this.canvas.putImageData(data, x || 0, y || 0);
 	},
-
+	
 	setColorAtIndex: function(p,i,r,g,b,a){
 		p.data[i] = r === undefined ? 0 : r;
 		p.data[i+1] = g === undefined ? 0 : g;
 		p.data[i+2] = b === undefined ? 0 : b;
 		p.data[i+3] = a === undefined ? 255 : a;
 	},
-	
 	setColorAt: function(p, x,y, r,g,b,a){
-		var i = x + y * this.canvas.width;
+		var i = Math.round(x) + Math.round(y) * this.DOM.width;
 		i *= 4;
 		this.setColorAtIndex(p,i,r,g,b,a);
 	},
+	
+	createPixel: function(r,g,b,a){
+		var p = this.createData(1, 1);
+		this.setColorAtIndex(p,0,r,g,b,a);
+		return p;
+	},
+	
+	//--------------------------------------
 	
 	setColor: function(color){
 		if (!color) return;
@@ -41,10 +37,12 @@ module.exports.prototype = {
 		if (tmp.stroke) this.canvas.strokeStyle = tmp.stroke;
 		if (tmp.fill) this.canvas.fillStyle = tmp.fill;
 	},
+	
 	render: function(){
 		this.canvas.closePath();
 		this.canvas.stroke();
 	},
+	
 	drawLine: function(x1, y1, x2, y2, color, width){
 		this.setColor(color);
 		if (width) this.canvas.lineWidth = width;

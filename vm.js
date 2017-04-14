@@ -1,58 +1,47 @@
 var App = function(elem){
-	this.c = new Canvas({elem: $(elem), render: true});
-	this.width = this.c.canvas.canvas.width;
-	this.height = this.c.canvas.canvas.height;
+	this.c = new Canvas(elem);
+	this.width = this.c.DOM.width;
+	this.height = this.c.DOM.height;
 };
 
 App.prototype = {
 	run: function(){
 		this.update();
-		
-		this.beforePhysics();
-		this.physics();
-		this.afterPhysics();
-		
-		this.beforeRender();
 		this.render();
-		this.afterRender();
 	},
 	stop: function(){
 		clearInterval(this.timer);
-	},
-	physics: function(){
-		
-	},
-	render: function(){
-		
 	},
 	
 	//--------------------------
 	
 	start: function(){
-		this.data = this.c.createData(640,480);
-		//this.setPoint(100,100);
-		this.setRandomPoints(100);
+		this.data = this.c.createData(this.width, this.height);
+		this.setPoint(this.width/2, this.height/2, 255,0,0);
+		this.setRandomPoints(1000);
 		this.apply();
 	},
-
-	setPoint: function(_x,_y, r,g,b,a){
-		this.x = _x;
-		this.y = _y;
+	
+	setPoint: function(x,y, r,g,b,a){
+		this.x = x;
+		this.y = y;
 		this.color(r,g,b,a);
 	},
-
 	setRandomPoints: function(count){
 		this.points = [];
 		
 		iterate(count, () => {
-			this.x = random(639);
-			this.y = random(479);
+			this.setPoint(random(this.width), random(this.height));
+			
 			this.points.push({
 				x: this.x,
 				y: this.y
 			});
-
-			this.color();
+		});
+	},
+	clearPoints: function(){
+		foreach(this.points, (p) => {
+			this.setPoint(p.x,p.y, 0,0,0,0);
 		});
 	},
 
@@ -60,34 +49,41 @@ App.prototype = {
 		this.c.setColorAt(this.data, this.x,this.y, r,g,b,a);
 	},
 	apply: function(){
-		this.c.putData(this.data, 0,0);
+		this.c.putData(this.data);
 	},
 	
 	update: function(){
-		if (this.x >= 639) this.stop();
-		this.color(0,0,0,0);
-		this.x++;
-		this.color();
+		var l, dx, dy, m = 0.05;
+		
+		foreach(this.points, (p,i) => {
+			this.setPoint(p.x,p.y, 0,0,0,0);
+			
+			foreach(this.points, (p2,j) => {
+				if (i === j) return;
+				
+				dx = p2.x - p.x;
+				dy = p2.y - p.y;
+				
+				l = Math.sqrt(dx*dx + dy*dy);
+				
+				p.x += m*dx/l;
+				p.y += m*dy/l;
+			});
+			
+			this.setPoint(p.x,p.y);
+		});
+	},
+	
+	render: function(){
 		this.apply();
-	},
-	
-	beforePhysics: function(){
-		
-	},
-	afterPhysics: function(){
-		
-	},
-	
-	beforeRender: function(){
-		
-	},
-	afterRender: function(){
-		
 	}
 };
 
 $(function(){
 	var app = new App('#canvas');
 	app.start();
-	//app.timer = setInterval(function(){app.run()}, 40);
+	
+	$(document).on('click', '#canvas', function(){app.stop()});
+	
+	app.timer = setInterval(function(){app.run()}, 100);
 });
