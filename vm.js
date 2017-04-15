@@ -1,7 +1,8 @@
 var App = function(elem){
 	this.c = new Canvas(elem);
-	this.width = this.c.DOM.width;
-	this.height = this.c.DOM.height;
+
+	this.c.DOM.width = this.width = $(window).width();
+	this.c.DOM.height = this.height = $(window).height();
 };
 
 App.prototype = {
@@ -10,7 +11,9 @@ App.prototype = {
 		this.render();
 	},
 	stop: function(){
+		if (!this.timer) return;
 		clearInterval(this.timer);
+		this.timer = null;
 	},
 	
 	//--------------------------
@@ -18,7 +21,7 @@ App.prototype = {
 	start: function(){
 		this.data = this.c.createData(this.width, this.height);
 		this.setPoint(this.width/2, this.height/2, 255,0,0);
-		this.setRandomPoints(1000);
+		this.setRandomPoints(200);
 		this.apply();
 	},
 	
@@ -29,13 +32,17 @@ App.prototype = {
 	},
 	setRandomPoints: function(count){
 		this.points = [];
-		
+		var w2 = this.width/2;
+		var h2 = this.height/2;
+
 		iterate(count, () => {
-			this.setPoint(random(this.width), random(this.height));
+			var v = randomInCircle(w2, h2, w2/2);
+			this.setPoint(v.x, v.y);
 			
 			this.points.push({
 				x: this.x,
-				y: this.y
+				y: this.y,
+				speed: {x:0,y:0}
 			});
 		});
 	},
@@ -52,26 +59,55 @@ App.prototype = {
 		this.c.putData(this.data);
 	},
 	
+	getSign: function(a){
+		return a < 0 ? -1 : 1;
+	},
+	getKinetic: function(v,t){
+		return Math.sqrt(v*v - t);
+	},
 	update: function(){
-		var l, dx, dy, m = 0.05;
+		var p, p2, l, dx, dy, dxl, dyl;
+		var q = 0.0001, m = 0.0001;
 		
-		foreach(this.points, (p,i) => {
+		for (var i=0; i<this.points.length-1; i++){
+			p = this.points[i];
+
 			this.setPoint(p.x,p.y, 0,0,0,0);
 			
-			foreach(this.points, (p2,j) => {
-				if (i === j) return;
+			for (var j=i+1; j<this.points.length; j++){
+				p2 = this.points[j];
 				
 				dx = p2.x - p.x;
 				dy = p2.y - p.y;
 				
 				l = Math.sqrt(dx*dx + dy*dy);
+				dxl = m*dx/l;
+				dyl = m*dy/l;
 				
-				p.x += m*dx/l;
-				p.y += m*dy/l;
-			});
+				if (l > 2){
+					p.speed.x += dxl;
+					p.speed.y += dyl;
+					p2.speed.x -= dxl;
+					p2.speed.y -= dyl;
+				}
+				else {// collision
+					p.speed.x = -this.getSign(p.speed.x)*this.getKinetic(p.speed.x,q);
+					p.speed.y = -this.getSign(p.speed.y)*this.getKinetic(p.speed.y,q);
+					p2.speed.x = -this.getSign(p2.speed.x)*this.getKinetic(p2.speed.x,q);
+                                        p2.speed.y = -this.getSign(p2.speed.y)* this.getKinetic(p2.speed.y,q);
+				}
+
+				/*if (l < 20){
+					p.speed.x -= m*dx/l;
+                                        p.speed.y -= m*dy/l;
+				}*/
+
+			}
 			
+			p.x += p.speed.x;
+			p.y += p.speed.y;
 			this.setPoint(p.x,p.y);
-		});
+		}
 	},
 	
 	render: function(){
@@ -85,5 +121,5 @@ $(function(){
 	
 	$(document).on('click', '#canvas', function(){app.stop()});
 	
-	app.timer = setInterval(function(){app.run()}, 100);
+	app.timer = setInterval(function(){app.run()}, 20);
 });

@@ -22,6 +22,25 @@ global.random_val = function(o){
 	return o[random_key(o)];
 };
 
+global.randomInCircle = function(x,y,r){
+	var p, l, dx, dy;
+	do{
+		p = {x: random(x-r,x+r), y: random(y-r,y+r)};
+		dx = x - p.x;
+		dy = y - p.y;
+		l = Math.sqrt(dx*dx + dy*dy);
+	}
+	while (l > r);
+	return p;
+};
+
+global.tov = function(v){
+	return is_array(v) ? v : [v.x, v.y];
+};
+global.vadd = function(a,b){
+	
+};
+
 global.arr_last = global.str_last = function(a){
 	return a[a.length-1];
 };
