@@ -34,14 +34,15 @@ App.prototype = {
 		this.points = [];
 		var w2 = this.width/2;
 		var h2 = this.height/2;
-
+		
 		iterate(count, () => {
-			var v = randomInCircle(w2, h2, w2/2);
+			var v = randomInCircle(w2, h2, Math.min(w2/2,h2/2));
 			this.setPoint(v.x, v.y);
 			
 			this.points.push({
 				x: this.x,
 				y: this.y,
+				t: 0,
 				speed: {x:0,y:0}
 			});
 		});
@@ -51,7 +52,7 @@ App.prototype = {
 			this.setPoint(p.x,p.y, 0,0,0,0);
 		});
 	},
-
+	
 	color: function(r,g,b,a){
 		this.c.setColorAt(this.data, this.x,this.y, r,g,b,a);
 	},
@@ -62,16 +63,16 @@ App.prototype = {
 	getSign: function(a){
 		return a < 0 ? -1 : 1;
 	},
-	getKinetic: function(v,t){
-		return Math.sqrt(v*v - t);
+	getReflectionSpeed: function(v,t){
+		return -this.getSign(v)*(Math.abs(v) - t);
 	},
 	update: function(){
 		var p, p2, l, dx, dy, dxl, dyl;
-		var q = 0.0001, m = 0.0001;
+		var q = 0.01, m = 0.0001;
 		
 		for (var i=0; i<this.points.length-1; i++){
 			p = this.points[i];
-
+			
 			this.setPoint(p.x,p.y, 0,0,0,0);
 			
 			for (var j=i+1; j<this.points.length; j++){
@@ -91,17 +92,16 @@ App.prototype = {
 					p2.speed.y -= dyl;
 				}
 				else {// collision
-					p.speed.x = -this.getSign(p.speed.x)*this.getKinetic(p.speed.x,q);
-					p.speed.y = -this.getSign(p.speed.y)*this.getKinetic(p.speed.y,q);
-					p2.speed.x = -this.getSign(p2.speed.x)*this.getKinetic(p2.speed.x,q);
-                                        p2.speed.y = -this.getSign(p2.speed.y)* this.getKinetic(p2.speed.y,q);
+					p.speed.x = this.getReflectionSpeed(p.speed.x,q);
+					p.speed.y = this.getReflectionSpeed(p.speed.y,q);
+					p2.speed.x = this.getReflectionSpeed(p2.speed.x,q);
+					p2.speed.y = this.getReflectionSpeed(p2.speed.y,q);
 				}
-
+				
 				/*if (l < 20){
 					p.speed.x -= m*dx/l;
-                                        p.speed.y -= m*dy/l;
+					p.speed.y -= m*dy/l;
 				}*/
-
 			}
 			
 			p.x += p.speed.x;

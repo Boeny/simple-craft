@@ -1,6 +1,6 @@
 var h = require('./html');
 
-var content = h.canvas({id: 'canvas', style: 'width: 100%; height: 100%'});
+var content = h.canvas({id: 'canvas'});
 
 var script = h.script(require('fs').readFileSync(__dirname+'/vm.js', 'utf-8'));
 
