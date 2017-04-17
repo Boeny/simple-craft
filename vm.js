@@ -5,6 +5,7 @@ var App = function(elem){
 	this.c.DOM.height = this.height = $(window).height();
 	
 	this.bar = $('#bar');
+	this.restart_btn = $('.restart');
 };
 
 App.prototype = {
@@ -32,15 +33,20 @@ App.prototype = {
 		if (!this.frame) return;
 		this.timer = setInterval(() => {this.run()}, 20);
 	},
+	restart: function(){
+		this.stop();
+		this.frame = 1;
+		this.resume();
+	},
 	
 	//--------------------------
 	
 	init: function(){
 		this.data = this.c.createData(this.width, this.height);
 		this.setPoint(this.width/2, this.height/2, 255,0,0);
-		this.setRandomPoints(5000);
+		this.setRandomPoints(1000);
 		this.render();
-		this.calc(1000);
+		this.calc(5000);
 	},
 	
 	setPoint: function(x,y, r,g,b,a){
@@ -86,59 +92,60 @@ App.prototype = {
 	},
 	
 	getSpeed: function(v,t){
-		var abs = Math.abs(v);
-		if (abs < 0.001 || abs < t) return v;
-		return  this.getSign(v)*(abs - t);
+		var abs = {x: Math.abs(v.x), y: Math.abs(v.y)};
+		var l = vlen(abs);
+		if (l < 0.001 || l < t) return v;
+		return {x: this.getSign(v.x)*(abs.x - t), y: this.getSign(v.y)*(abs.y - t)};
 	},
 	
 	process: function(){
-		var p, p2, l, dx, dy, dxl, dyl;
+		var p, p2, l, d, s;
 		var q = 0.001, m = 0.0001;
 		
 		for (var i=0; i<this.points.length-1; i++){
 			p = this.points[i];
+			
+			if (!this.inScr(p)) continue;
 			
 			//this.setPoint(p.x,p.y, 0,0,0,0);
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
 				
-				dx = p2.x - p.x;
-				dy = p2.y - p.y;
+				if (!this.inScr(p2)) continue;
 				
-				l = Math.sqrt(dx*dx + dy*dy);
-				if (l > 100) continue;
-
-				dxl = m*dx/(l*l);
-				dyl = m*dy/(l*l);
+				d = vsub(p2, p, true);
+				l = vlen(d);
+				
+				//if (l > 100) continue;
+				
+				vmult(d, m/l);
 				
 				if (l > 10){
-					p.speed.x += dxl;
-					p.speed.y += dyl;
-					p2.speed.x -= dxl;
-					p2.speed.y -= dyl;
-					//p.t -= q/100;
-					//p2.t -= q/100;
+					vadd(p.speed, d);
+					vsub(p2.speed, d);
+					
+					s = vlen(p.speed);
+					if (p.t > s) p.t -= s;
+					
+					s = vlen(p2.speed);
+					if (p2.t > s) p2.t -= s;
 				}
 				else{
-					var g = 10;
 					if (l > 1){
-						p.speed.x += g*dxl;
-						p.speed.y += g*dyl;
-						p2.speed.x -= g*dxl;
-						p2.speed.y -= g*dyl;
+						vadd(p.speed, vmult(d,10,true));
+						vsub(p2.speed, vmult(d,10,true));
 					}
 					else {// collision
-						p.speed.x = -this.getSign(dxl)*(1-l);
-						p.speed.y = -this.getSign(dyl)*(1-l);
-						p2.speed.x = this.getSign(dxl)*(1-l);
-						p2.speed.y = this.getSign(dyl)*(1-l);
+						d = {x: this.getSign(d.x)*(1-l), y: this.getSign(d.y)*(1-l)};
+						// repulse depends on temperature
+						p.speed = vmult(d, -p.t, true);
+						p2.speed = vmult(d, -p2.t, true);
 						
-						//p2.speed.x = p.speed.x = (this.getSpeed(p.speed.x,q) + this.getSpeed(p2.speed.x,q))/2;
-						//p2.speed.y = p.speed.y = (this.getSpeed(p.speed.y,q) + this.getSpeed(p2.speed.y,q))/2;
+						//p2.speed = p.speed = vmult(vadd(this.getSpeed(p.speed,q), this.getSpeed(p2.speed,q)), 0.5);
 						
-						//p.t += g*q;
-						//p2.t += g*q;
+						p.t += vlen(p2.speed);
+						p2.t += vlen(p.speed);
 					}
 				}
 			}
@@ -172,12 +179,14 @@ App.prototype = {
 		this.history = [this.copyPoints()];
 		
 		var l = this.bar.parent().width();
+		
 		var _data = {
 			index: 0,
 			frames: frames,
 			bar_length: Math.round(frames / l),
 			bar_koef: l / frames
 		};
+		
 		this.calc_timer = setInterval(() => {this.calcStep(_data)}, 20);
 	},
 	
@@ -195,13 +204,14 @@ App.prototype = {
 			clearInterval(this.calc_timer);
 			this.points = null;
 			this.frame = 1;
+			this.restart_btn.show();
 		}
 	},
 	
 	inScr: function(p){
 		return p.x > 0 && p.x < this.width && p.y > 0 && p.y < this.height;
 	},
-
+	
 	update: function(){
 		var points = this.history[this.frame];
 		if (!points){
@@ -211,10 +221,8 @@ App.prototype = {
 		
 		var old = this.history[this.frame-1];
 		for (var i in points){
-			if (this.inScr(old[i]))
-			this.setPoint(old[i].x, old[i].y, 0,0,0,0);
-			if (this.inScr(points[i]))
-			this.setPoint(points[i].x, points[i].y);//, 2550*p.t);
+			if (this.inScr(old[i]))		this.setPoint(old[i].x, old[i].y, 0,0,0,0);
+			if (this.inScr(points[i]))	this.setPoint(points[i].x, points[i].y, 255*p.t);
 		}
 		
 		this.frame++;
@@ -233,6 +241,10 @@ $(function(){
 			app.stop();
 		else
 			app.resume();
+	});
+	
+	$('.restart').on('click', function(){
+		app.restart();
 	});
 	
 	app.start();

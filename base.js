@@ -34,11 +34,35 @@ global.randomInCircle = function(x,y,r){
 	return p;
 };
 
-global.tov = function(v){
-	return is_array(v) ? v : [v.x, v.y];
+global.vlen = function(a){
+	return Math.sqrt(a.x*a.x + a.y*a.y);
 };
-global.vadd = function(a,b){
+global.vadd = function(a,b,ret){
+	if (ret) return {
+		x: a.x + b.x,
+		y: a.y + b.y
+	};
 	
+	a.x += b.x;
+	a.y += b.y;
+};
+global.vsub = function(a,b,ret){
+	if (ret) return {
+		x: a.x - b.x,
+		y: a.y - b.y
+	};
+	
+	a.x -= b.x;
+	a.y -= b.y;
+};
+global.vmult = function(v, num, ret){
+	if (ret) return {
+		x: v.x * num,
+		y: v.y * num
+	};
+	
+	v.x *= num;
+	v.y *= num;
 };
 
 global.arr_last = global.str_last = function(a){
