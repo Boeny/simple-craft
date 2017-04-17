@@ -3,6 +3,7 @@ var styles = {
 	'^app':'width:100%;height:100%',
 	'^abs':'position:absolute',
 	'^fix':'position:fixed',
+	'^rel':'position:relative',
 	'^top':'top:0',
 	'^bottom':'bottom:0',
 	'^right':'right:0',
