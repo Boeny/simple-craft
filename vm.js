@@ -11,6 +11,9 @@ App.prototype = {
 	history: [],
 	frame: 0,
 	bar: null,
+	x: 0,
+	y: 0,
+	points: [],
 	
 	run: function(){
 		this.update();
@@ -26,6 +29,7 @@ App.prototype = {
 		this.timer = null;
 	},
 	resume: function(){
+		if (!this.frame) return;
 		this.timer = setInterval(() => {this.run()}, 20);
 	},
 	
@@ -34,9 +38,9 @@ App.prototype = {
 	init: function(){
 		this.data = this.c.createData(this.width, this.height);
 		this.setPoint(this.width/2, this.height/2, 255,0,0);
-		this.setRandomPoints(200);
+		this.setRandomPoints(5000);
 		this.render();
-		this.calc(10000);
+		this.calc(1000);
 	},
 	
 	setPoint: function(x,y, r,g,b,a){
@@ -46,7 +50,6 @@ App.prototype = {
 	},
 	
 	setRandomPoints: function(count){
-		this.points = [];
 		var w2 = this.width/2;
 		var h2 = this.height/2;
 		var r = Math.min(w2/2,h2/2);
@@ -90,7 +93,7 @@ App.prototype = {
 	
 	process: function(){
 		var p, p2, l, dx, dy, dxl, dyl;
-		var q = 0.001, m = 0.00001;
+		var q = 0.001, m = 0.0001;
 		
 		for (var i=0; i<this.points.length-1; i++){
 			p = this.points[i];
@@ -104,16 +107,18 @@ App.prototype = {
 				dy = p2.y - p.y;
 				
 				l = Math.sqrt(dx*dx + dy*dy);
-				dxl = m*dx/l;
-				dyl = m*dy/l;
+				if (l > 100) continue;
+
+				dxl = m*dx/(l*l);
+				dyl = m*dy/(l*l);
 				
 				if (l > 10){
 					p.speed.x += dxl;
 					p.speed.y += dyl;
 					p2.speed.x -= dxl;
 					p2.speed.y -= dyl;
-					p.t -= q/100;
-					p2.t -= q/100;
+					//p.t -= q/100;
+					//p2.t -= q/100;
 				}
 				else{
 					var g = 10;
@@ -124,16 +129,16 @@ App.prototype = {
 						p2.speed.y -= g*dyl;
 					}
 					else {// collision
-						p.speed.x -= this.getSign(dxl)*(1-l);
-						p.speed.y -= this.getSign(dyl)*(1-l);
-						p2.speed.x += this.getSign(dxl)*(1-l);
-						p2.speed.y += this.getSign(dyl)*(1-l);
+						p.speed.x = -this.getSign(dxl)*(1-l);
+						p.speed.y = -this.getSign(dyl)*(1-l);
+						p2.speed.x = this.getSign(dxl)*(1-l);
+						p2.speed.y = this.getSign(dyl)*(1-l);
 						
 						//p2.speed.x = p.speed.x = (this.getSpeed(p.speed.x,q) + this.getSpeed(p2.speed.x,q))/2;
 						//p2.speed.y = p.speed.y = (this.getSpeed(p.speed.y,q) + this.getSpeed(p2.speed.y,q))/2;
 						
-						p.t += g*q;
-						p2.t += g*q;
+						//p.t += g*q;
+						//p2.t += g*q;
 					}
 				}
 			}
@@ -167,13 +172,13 @@ App.prototype = {
 		this.history = [this.copyPoints()];
 		
 		var l = this.bar.parent().width();
-		
-		$(window).trigger('calc', {
+		var _data = {
 			index: 0,
 			frames: frames,
-			bar_length: l,
+			bar_length: Math.round(frames / l),
 			bar_koef: l / frames
-		});
+		};
+		this.calc_timer = setInterval(() => {this.calcStep(_data)}, 20);
 	},
 	
 	calcStep: function(_data){
@@ -184,21 +189,32 @@ App.prototype = {
 				this.history.push(this.copyPoints());
 			}
 			_data.index += _data.bar_length;
-			$(window).trigger('calc', _data);
+			this.bar.width(_data.bar_koef * _data.index);
 		}
 		else{
+			clearInterval(this.calc_timer);
+			this.points = null;
 			this.frame = 1;
 		}
 	},
 	
+	inScr: function(p){
+		return p.x > 0 && p.x < this.width && p.y > 0 && p.y < this.height;
+	},
+
 	update: function(){
 		var points = this.history[this.frame];
-		if (!points) return;
+		if (!points){
+			this.stop();
+			return;
+		}
 		
 		var old = this.history[this.frame-1];
 		for (var i in points){
+			if (this.inScr(old[i]))
 			this.setPoint(old[i].x, old[i].y, 0,0,0,0);
-			this.setPoint(points[i].x, points[i].y, 2550*p.t);
+			if (this.inScr(points[i]))
+			this.setPoint(points[i].x, points[i].y);//, 2550*p.t);
 		}
 		
 		this.frame++;
@@ -217,12 +233,6 @@ $(function(){
 			app.stop();
 		else
 			app.resume();
-	});
-	
-	$(window).on('calc', function(e, _data){
-		//app.bar.width(_data.bar_koef * _data.index);
-		app.bar.html(_data.index+' of '+_data.frames);
-		app.calcStep(_data);
 	});
 	
 	app.start();
