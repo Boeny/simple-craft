@@ -1,4 +1,5 @@
-global.random = function(min, max){
+//------------------------------------ RANDOM
+global.random = function(min, max, _float){
 	if (!max){
 		max = min;
 		min = 0;
@@ -9,9 +10,9 @@ global.random = function(min, max){
 	if (min === 0 && max === 1){
 		return 100*Math.random() < 50 ? 0 : 1;
 	}
-	return parseInt((1 + max - min)*Math.random() + min);// +1 because max is never achieved
+	var result = (1 + max - min)*Math.random() + min;// +1 because max has never achieved
+	return _float ? result : parseInt(result);
 };
-
 global.random_key = function(o){
 	return random_elem(obj_keys(o));
 };
@@ -21,11 +22,10 @@ global.random_elem = function(arr){
 global.random_val = function(o){
 	return o[random_key(o)];
 };
-
-global.randomInCircle = function(x,y,r){
+global.randomInCircle = function(x, y, r, _float){
 	var p, l, dx, dy;
 	do{
-		p = {x: random(x-r,x+r), y: random(y-r,y+r)};
+		p = {x: random(x-r, x+r, _float), y: random(y-r, y+r, _float)};
 		dx = x - p.x;
 		dy = y - p.y;
 		l = Math.sqrt(dx*dx + dy*dy);
@@ -34,48 +34,66 @@ global.randomInCircle = function(x,y,r){
 	return p;
 };
 
+//------------------------------------ VECTORS
+global.vcheck = function(num){
+	if (typeof num !== 'number')
+		throw TypeError(arguments.calee+' error: coo must be a number!');
+};
+global.vuno = function(num){
+	vcheck(num);
+	return vget(num, num);
+};
+global.vwith = function(v, func){
+	return vget(func(v.x), func(v.y));
+};
+global.vcopy = function(v){
+	return vget(v.x, v.y);
+};
+global.vget = function(x, y){
+	vcheck(x);
+	vcheck(y);
+	return {x: x, y: y};
+};
 global.vlen = function(a){
 	return Math.sqrt(a.x*a.x + a.y*a.y);
 };
-global.vadd = function(a,b,ret){
-	if (ret) return {
-		x: a.x + b.x,
-		y: a.y + b.y
-	};
+global.tov = function(v){
+	return is_object(v) ? v : vuno(v);
+};
+global.vadd = function(a, b, ret){
+	b = tov(b);
+	
+	if (ret) return vget(a.x + b.x, a.y + b.y);
 	
 	a.x += b.x;
 	a.y += b.y;
 };
-global.vsub = function(a,b,ret){
-	if (ret) return {
-		x: a.x - b.x,
-		y: a.y - b.y
-	};
+global.vsub = function(a, b, ret){
+	b = tov(b);
+	
+	if (ret) return vget(a.x - b.x, a.y - b.y);
 	
 	a.x -= b.x;
 	a.y -= b.y;
 };
-global.vmult = function(v, num, ret){
-	if (ret) return {
-		x: v.x * num,
-		y: v.y * num
-	};
+global.vmult = function(a, b, ret){
+	b = tov(b);
 	
-	v.x *= num;
-	v.y *= num;
+	if (ret) return vget(a.x * b.x, a.y * b.y);
+	
+	a.x *= b.x;
+	a.y *= b.y;
 };
 
-global.arr_last = global.str_last = function(a){
-	return a[a.length-1];
-};
-
+//------------------------------------ LOGIC
 global.xor = function(a, b){
 	return !a !== !b;
 };
-global.xnor = function(a,b){
+global.xnor = function(a, b){
 	return !a === !b;
 };
 
+//------------------------------------ ARRAYS
 /**
  * if a in array arr 
  * @param {mixed/array} a
@@ -93,15 +111,37 @@ global.in_array = function(a, arr){
 global.arr_first = function(a){
 	return a[0];
 };
-global.arr_last = function(a){
-	return a[a.length - 1];
+global.arr_last = global.str_last = function(a){
+	return a[a.length-1];
 };
 global.arr_remove = function(a,v){
 	var i = a.indexOf(v);
 	if (i !== -1) a.splice(i,1);
 	return a;
 };
+global.arr_create = function(count, v){
+	var r = [];
+	iterate(count, function(i){
+		r.push(v === undefined ? i : v);
+	});
+	return r;
+};
+global.array_to_select = function(a, index_to_int){
+	var result = {};
+	var v;
+	
+	for (var i in a)
+	{
+		if (index_to_int) i = +i;
+		
+		v = a[i].name;
+		
+		result[a[i].id] = v;
+	}
+	return result;
+};
 
+//------------------------------------ STRINGS
 /**
  * говорит, есть ли хотя бы одна подстрока(-и) s в строке str
  * @param {string/array} s подстрока
@@ -119,6 +159,11 @@ global.in_str = function(s, str){
 	}
 	return str.toString().indexOf(s) != -1;
 };
+global.str_create = function(count, v){
+	return arr_create(count, v).join();
+};
+
+//------------------------------------ OBJECTS
 global.in_obj_keys = function(k, o){
 	return in_array(k, obj_keys(o));
 };
@@ -147,7 +192,6 @@ global.swap_obj_fields = function(o, f1, f2){
 	o[f1] = o[f2];
 	o[f2] = tmp;
 };
-
 /**
  * проверяет существование ключа у объекта с присовением ему значения по умолчанию
  * @param {object} obj объект
@@ -162,21 +206,7 @@ global.check_obj = function(obj, key, def){
 	return obj[key];// ссылка на добавленный объект или текущее значение
 };
 
-global.array_to_select = function(a, index_to_int){
-	var result = {};
-	var v;
-	
-	for (var i in a)
-	{
-		if (index_to_int) i = +i;
-		
-		v = a[i].name;
-		
-		result[a[i].id] = v;
-	}
-	return result;
-};
-
+//------------------------------------ TYPES
 /**
  * проверяет тип переменной
  * @param {string} type
@@ -220,17 +250,7 @@ global.is_func = global.is_callable = function(func){
 	return func && is_('function', func);
 };
 
-global.arr_create = function(count, v){
-	var r = [];
-	iterate(count, function(i){
-		r.push(v === undefined ? i : v);
-	});
-	return r;
-};
-global.str_create = function(count, v){
-	return arr_create(count, v).join();
-};
-
+//------------------------------------ LOOPS
 global.iterate = function(count, func){
 	for (var i=0; i<count; i++){
 		if (func(i) === false)

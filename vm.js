@@ -9,6 +9,15 @@ var App = function(elem){
 };
 
 App.prototype = {
+	points_count: 300,
+	radius: 100,
+	frames_count: 1000,
+	mass: 0.00001,
+	
+	tail: 10,// px
+	temp_ergy: 0.001,
+	close_mult: 10,
+	
 	history: [],
 	frame: 0,
 	bar: null,
@@ -43,10 +52,9 @@ App.prototype = {
 	
 	init: function(){
 		this.data = this.c.createData(this.width, this.height);
-		this.setPoint(this.width/2, this.height/2, 255,0,0);
-		this.setRandomPoints(500);
+		this.setRandomPoints(this.points_count);
 		this.render();
-		this.calc(1000);
+		this.calc(this.frames_count);
 	},
 	
 	setPoint: function(x,y, r,g,b,a){
@@ -58,24 +66,19 @@ App.prototype = {
 	setRandomPoints: function(count){
 		var w2 = this.width/2;
 		var h2 = this.height/2;
-		var r = Math.min(w2/2,h2/2);
+		var r = this.radius || Math.min(w2/2,h2/2);
 		
 		iterate(count, () => {
-			var v = randomInCircle(w2, h2, r);
+			var v = randomInCircle(w2, h2, r, true);// as float
 			this.setPoint(v.x, v.y);
 			
 			this.points.push({
 				x: this.x,
 				y: this.y,
 				t: 0,
-				speed: {x:0,y:0}
+				c: 0,// connected
+				speed: vuno(0)
 			});
-		});
-	},
-	
-	clearPoints: function(){
-		foreach(this.points, (p) => {
-			this.setPoint(p.x,p.y, 0,0,0,0);
 		});
 	},
 	
@@ -91,57 +94,70 @@ App.prototype = {
 		return a < 0 ? -1 : 1;
 	},
 	
-	getSpeed: function(v,t){
-		var abs = {x: Math.abs(v.x), y: Math.abs(v.y)};
+	getSpeed: function(v){
+		var abs = vwith(v, (coo) => Math.abs(coo));
 		var l = vlen(abs);
-		if (l < 0.001 || l < t) return v;
-		return {x: this.getSign(v.x)*(abs.x - t), y: this.getSign(v.y)*(abs.y - t)};
+		
+		if (l < 0.001 || l < this.temp_ergy) return v;
+		
+		return vmult(
+			vwith(v, (coo) => this.getSign(coo)),
+			vsub(abs, vuno(this.temp_ergy), true),
+			true
+		);
 	},
 	
 	process: function(){
 		var p, p2, l, d, s;
-		var q = 0.001, m = 0.0001;
 		
-		for (var i=0; i<this.points.length-1; i++){
+		for (var i=0; i<this.points.length; i++){
 			p = this.points[i];
 			
-			if (!this.inScr(p)) continue;
+			//if (!this.inScr(p)) continue;
 			
 			//this.setPoint(p.x,p.y, 0,0,0,0);
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
 				
-				if (!this.inScr(p2)) continue;
+				//if (!this.inScr(p2)) continue;
 				
 				d = vsub(p2, p, true);
 				l = vlen(d);
 				
 				//if (l > 100) continue;
 				
-				vmult(d, m/l);
-				
-				if (l > 10){
+				if (l > 1){
+					vmult(d, this.mass/l);
+					
 					vadd(p.speed, d);
 					vsub(p2.speed, d);
+					
+					/*if (p.c && p.c === p2.c){// connected
+						vmult(p.speed, this.close_mult);
+						vmult(p2.speed, this.close_mult);
+					}*/
 				}
 				else{// collision
-					p.c = true;
-					p2.c = true;
+					//p.c = i;
+					//p2.c = j;
+					
 					d = {x: this.getSign(d.x)*(1-l), y: this.getSign(d.y)*(1-l)};
-						p.speed = vmult(d, -p.t, true);
-						p2.speed = vmult(d, -p2.t, true);
-						
-						//p2.speed = p.speed = vmult(vadd(this.getSpeed(p.speed,q), this.getSpeed(p2.speed,q)), 0.5);
-						
-						p.t += vlen(p2.speed);
-						p2.t += vlen(p.speed);
-					}
+					
+					vsub(p, d);
+					vadd(p2, d);
+					
+					s = vmult(vadd(p.speed, p2.speed, true), 0.5, true);
+					p.speed = vcopy(s);
+					p2.speed = vcopy(s);
+					
+					//p.t += vlen(p2.speed);
+					//p2.t += vlen(p.speed);
 				}
 			}
 			
-			p.x += p.speed.x;
-			p.y += p.speed.y;
+			vadd(p, p.speed);
+			
 			//this.setPoint(p.x,p.y, 2550*p.t);
 		}
 	},
@@ -155,10 +171,7 @@ App.prototype = {
 				x: p.x,
 				y: p.y,
 				t: p.t,
-				speed: {
-					x: p.speed.x,
-					y: p.speed.y
-				}
+				speed: vcopy(p.speed)
 			});
 		}
 		
@@ -166,7 +179,7 @@ App.prototype = {
 	},
 	
 	calc: function(frames){
-		this.history = [this.copyPoints()];
+		this.history.push(this.copyPoints());
 		
 		var l = this.bar.parent().width();
 		
@@ -199,24 +212,42 @@ App.prototype = {
 		clearInterval(this.calc_timer);
 		this.points = null;
 		this.frame = 1;
-                this.restart_btn.show();
+		this.restart_btn.show();
 	},
-
+	
 	inScr: function(p){
 		return p.x > 0 && p.x < this.width && p.y > 0 && p.y < this.height;
 	},
 	
 	update: function(){
+		var old, opacity;
+		var step = Math.round(255/this.tail);
+		
+		var i = 0;
+		var t = this.frame - this.tail;
+		if (t < 0) t = 0;
+		
+		do {
+			old = this.history[t];
+			opacity = i*step;
+			
+			for (var i in old){
+				if (this.inScr(old[i])) this.setPoint(old[i].x, old[i].y, 0,0,0,opacity);
+			}
+			
+			i++;
+			t++;
+		}
+		while(t < this.frame);
+		
 		var points = this.history[this.frame];
 		if (!points){
 			this.stop();
 			return;
 		}
 		
-		var old = this.history[this.frame-1];
 		for (var i in points){
-			if (this.inScr(old[i]))		this.setPoint(old[i].x, old[i].y, 0,0,0,0);
-			if (this.inScr(points[i]))	this.setPoint(points[i].x, points[i].y, 255*p.t);
+			if (this.inScr(points[i])) this.setPoint(points[i].x, points[i].y, 0,0,0,255);// , 255 * p.t
 		}
 		
 		this.frame++;
