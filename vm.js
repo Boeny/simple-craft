@@ -30,7 +30,7 @@ App.prototype = {
 		this.timer = null;
 	},
 	resume: function(){
-		if (!this.frame) return;
+		if (!this.frame) this.stopCalc();
 		this.timer = setInterval(() => {this.run()}, 20);
 	},
 	restart: function(){
@@ -44,9 +44,9 @@ App.prototype = {
 	init: function(){
 		this.data = this.c.createData(this.width, this.height);
 		this.setPoint(this.width/2, this.height/2, 255,0,0);
-		this.setRandomPoints(1000);
+		this.setRandomPoints(500);
 		this.render();
-		this.calc(5000);
+		this.calc(1000);
 	},
 	
 	setPoint: function(x,y, r,g,b,a){
@@ -124,21 +124,11 @@ App.prototype = {
 				if (l > 10){
 					vadd(p.speed, d);
 					vsub(p2.speed, d);
-					
-					s = vlen(p.speed);
-					if (p.t > s) p.t -= s;
-					
-					s = vlen(p2.speed);
-					if (p2.t > s) p2.t -= s;
 				}
-				else{
-					if (l > 1){
-						vadd(p.speed, vmult(d,10,true));
-						vsub(p2.speed, vmult(d,10,true));
-					}
-					else {// collision
-						d = {x: this.getSign(d.x)*(1-l), y: this.getSign(d.y)*(1-l)};
-						// repulse depends on temperature
+				else{// collision
+					p.c = true;
+					p2.c = true;
+					d = {x: this.getSign(d.x)*(1-l), y: this.getSign(d.y)*(1-l)};
 						p.speed = vmult(d, -p.t, true);
 						p2.speed = vmult(d, -p2.t, true);
 						
@@ -201,13 +191,17 @@ App.prototype = {
 			this.bar.width(_data.bar_koef * _data.index);
 		}
 		else{
-			clearInterval(this.calc_timer);
-			this.points = null;
-			this.frame = 1;
-			this.restart_btn.show();
+			this.stopCalc();
 		}
 	},
 	
+	stopCalc: function(){
+		clearInterval(this.calc_timer);
+		this.points = null;
+		this.frame = 1;
+                this.restart_btn.show();
+	},
+
 	inScr: function(p){
 		return p.x > 0 && p.x < this.width && p.y > 0 && p.y < this.height;
 	},
