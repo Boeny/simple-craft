@@ -11,22 +11,27 @@ module.exports.prototype = {
 		this.canvas.putImageData(data, x || 0, y || 0);
 	},
 	
-	setColorAtIndex: function(p,i,r,g,b,a){
+	getColorAtIndex: function(p,i){
+		return {
+			r: p.data[i] || 0,
+			g: p.data[i+1] || 0,
+			b: p.data[i+2] || 0,
+			a: p.data[i+3] || 0
+		};
+	},
+	setColorAtIndex: function(p,i, r,g,b,a){
 		p.data[i] = r === undefined ? 0 : r;
 		p.data[i+1] = g === undefined ? 0 : g;
 		p.data[i+2] = b === undefined ? 0 : b;
 		p.data[i+3] = a === undefined ? 255 : a;
 	},
-	setColorAt: function(p, x,y, r,g,b,a){
-		var i = Math.round(x) + Math.round(y) * this.DOM.width;
-		i *= 4;
-		this.setColorAtIndex(p,i,r,g,b,a);
-	},
 	
-	createPixel: function(r,g,b,a){
-		var p = this.createData(1, 1);
-		this.setColorAtIndex(p,0,r,g,b,a);
-		return p;
+	getColorAt: function(p, x,y){
+		return this.getColorAtIndex(p, 4*(x + y * this.DOM.width));
+	},
+	setColorAt: function(p, x,y, r,g,b,a){
+		var i = 4*(x + y * this.DOM.width);
+		this.setColorAtIndex(p,i, r,g,b,a);
 	},
 	
 	//--------------------------------------

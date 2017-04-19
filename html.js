@@ -19,7 +19,7 @@ var styles = {
 	'^bk_(.*)':'background:$1',
 	'^c_(.*)':'color:$1',
 	
-	'^b$':'border:1px solid #333',
+	'^b$':'border:1px solid #aaa',
 	'^bc_(.*)':'border-color:$1',
 	'^b_(.*)_(.*)':'border-$1:1px solid $2',
 	
