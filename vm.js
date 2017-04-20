@@ -9,25 +9,25 @@ var App = function(elem){
 	this.bar = $('#bar');
 	this.restart_btn = $('.restart');
 	
-	var data = this.c.createData(this.width, this.height);
-	this.setRandomPoints(data, this.points_count);
-	this.c.putData(data);
+	this.img = this.c.createData(this.width, this.height);
+	this.setRandomPoints(this.img, this.points_count);
+	this.c.putData(this.img);
 };
 
 App.prototype = {
 	points_count: 200,
-	radius: 100,
+	radius: 50,
 	frames_count: 1000,
 	mass: 0.00001,
 	
-	tail: 1,// px
+	tail: 10,// px
 	collision_distance: 0.5,
 	
-	temp_ergy: 0.001,
-	close_mult: 10,
+	//temp_ergy: 0.001,
+	//close_mult: 10,
+	temp_color_inc: 50,
 	
 	history: [],
-	tmp_history: [],
 	frame: 0,
 
 	c: null,
@@ -134,47 +134,44 @@ App.prototype = {
 	},
 	
 	copyPoints: function(frame){
-		var data = this.c.createData(this.width, this.height);
-		var p, c, h = [];
-		var need_tail = this.tmp_history.length < this.tail;
+		var data = {};
+		var p, c;
 		
 		for (var i in this.points){
 			p = vwith(this.points[i], (coo) => Math.round(coo));
 			if (!this.inScr(p)) continue;
 			
-			c = this.c.getColorAt(data, p.x, p.y);
-			
-			if (c.a){
-				this.c.setColorAt(data, p.x, p.y, c.r + 1, c.g, c.b, c.a);
+			if (data[p.y] && data[p.y][p.x])
+			{
+				c = data[p.y][p.x].r + this.temp_color_inc;
+				data[p.y][p.x].r = c > 255 ? 255 : c;
 			}
 			else{
-				this.c.setColorAt(data, p.x, p.y);
+				check_obj(data, p.y, {});
+				data[p.y][p.x] = {r: 0, g: 0, b: 0, a: 255};
 			}
-
-			if (need_tail) h.push(p);
 		}
 		
-		this.tmp_history.push(h);
-
 		if (!frame) return data;
 		
-		var old, opacity, old_tmp;
+		var old, opacity;
 		var step = Math.round(255/this.tail);
 		
-		var i = 0;
 		var t = frame - this.tail;
 		if (t < 0) t = 0;
+		var i = 0;
 		
 		do {
 			old = this.history[t];
-			old_tmp = this.tmp_history[i];
 			opacity = i*step;
 			
-			for (var i in old_tmp){
-				p = old[i];
-				c = this.c.getColorAt(old, p.x, p.y);
-				if (!c.a){
-					this.c.setColorAt(data, p.x, p.y, c.r, c.g, c.b, opacity);
+			for (var y in old)
+			for (var x in old[y]){
+				if (!data[y] || !data[y][x])
+				{
+					check_obj(data, y, {});
+					//c = this.c.getColorAt(this.img, x, y);
+					data[y][x] = {r: 0, g: 0, b: 0, a: opacity};
 				}
 			}
 			
@@ -199,15 +196,15 @@ App.prototype = {
 			bar_koef: l / frames
 		};
 		
-		this.calc_timer = setInterval(() => {this.calcStep(_data)}, 0);
+		this.calc_timer = setInterval(() => {this.calcStep(_data)}, 20);
 	},
 	
 	calcStep: function(_data){
 		if (_data.index < _data.frames)
 		{
-			for (var i=0; i < _data.bar_length; i++){
+			for (var i=1; i <= _data.bar_length; i++){
 				this.process();
-				this.history.push(this.copyPoints(_data.index + i + 1));
+				this.history.push(this.copyPoints(_data.index + i));
 			}
 			
 			_data.index += _data.bar_length;
@@ -234,14 +231,14 @@ App.prototype = {
 			return;
 		}
 		
-		this.c.putData(data);
+		var p;
+		for (var y in data)
+		for (var x in data[y]){
+			p = data[y][x];
+			this.c.setColorAt(this.img, x, y, p.r, p.g, p.b, p.a);
+		}
 		
-		/*var p;
-		for (var y in points)
-		for (var x in points[y]){
-			p = points[y][x];
-			this.setPoint(x, y, p.r, p.g, p.b, p.a);
-		}*/
+		this.c.putData(this.img);
 		
 		this.frame++;
 	}
