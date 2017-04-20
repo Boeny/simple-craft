@@ -21,14 +21,18 @@ App.prototype = {
 	mass: 0.00001,
 	
 	tail: 1,// px
-	collision_distance: 2,
+	collision_distance: 0.5,
 	
 	temp_ergy: 0.001,
 	close_mult: 10,
 	
 	history: [],
+	tmp_history: [],
 	frame: 0,
+
+	c: null,
 	bar: null,
+	restart_btn: null,
 	x: 0,
 	y: 0,
 	points: [],
@@ -131,11 +135,12 @@ App.prototype = {
 	
 	copyPoints: function(frame){
 		var data = this.c.createData(this.width, this.height);
-		var p, c;
+		var p, c, h = [];
+		var need_tail = this.tmp_history.length < this.tail;
 		
 		for (var i in this.points){
 			p = vwith(this.points[i], (coo) => Math.round(coo));
-			//if (!this.inScr(p)) continue;
+			if (!this.inScr(p)) continue;
 			
 			c = this.c.getColorAt(data, p.x, p.y);
 			
@@ -145,35 +150,38 @@ App.prototype = {
 			else{
 				this.c.setColorAt(data, p.x, p.y);
 			}
+
+			if (need_tail) h.push(p);
 		}
 		
+		this.tmp_history.push(h);
+
 		if (!frame) return data;
 		
-		/*var old, opacity;
+		var old, opacity, old_tmp;
 		var step = Math.round(255/this.tail);
 		
 		var i = 0;
 		var t = frame - this.tail;
 		if (t < 0) t = 0;
 		
-		var p;
-		
 		do {
 			old = this.history[t];
+			old_tmp = this.tmp_history[i];
 			opacity = i*step;
 			
-			for (var i=0; i<old.data.length; i+=4){
+			for (var i in old_tmp){
 				p = old[i];
-				
+				c = this.c.getColorAt(old, p.x, p.y);
 				if (!c.a){
-					this.c.setColorAt(data, p.x, p.y, 0, 0, 0, opacity);
+					this.c.setColorAt(data, p.x, p.y, c.r, c.g, c.b, opacity);
 				}
 			}
 			
 			i++;
 			t++;
 		}
-		while(t < frame);*/
+		while(t < frame);
 		
 		return data;
 	},
