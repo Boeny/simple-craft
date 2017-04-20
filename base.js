@@ -37,7 +37,7 @@ global.randomInCircle = function(x, y, r, _float){
 //------------------------------------ VECTORS
 global.vcheck = function(num){
 	if (typeof num !== 'number')
-		throw TypeError(arguments.calee+' error: coo must be a number!');
+		throw TypeError(arguments.callee+' error: coo must be a number!');
 };
 global.vuno = function(num){
 	vcheck(num);

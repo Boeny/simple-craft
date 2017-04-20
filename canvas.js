@@ -19,19 +19,21 @@ module.exports.prototype = {
 			a: p.data[i+3] || 0
 		};
 	},
-	setColorAtIndex: function(p,i, r,g,b,a){
-		p.data[i] = r === undefined ? 0 : r;
-		p.data[i+1] = g === undefined ? 0 : g;
-		p.data[i+2] = b === undefined ? 0 : b;
-		p.data[i+3] = a === undefined ? 255 : a;
+	setColorAtIndex: function(p,i,c){
+		c = c || {};
+		
+		p.data[i] = c.r === undefined ? 0 : c.r;
+		p.data[i+1] = c.g === undefined ? 0 : c.g;
+		p.data[i+2] = c.b === undefined ? 0 : c.b;
+		p.data[i+3] = c.a === undefined ? 255 : c.a;
 	},
 	
 	getColorAt: function(p, x,y){
 		return this.getColorAtIndex(p, 4*(x + y * this.DOM.width));
 	},
-	setColorAt: function(p, x,y, r,g,b,a){
+	setColorAt: function(p, x,y, c){
 		var i = 4*(x + y * this.DOM.width);
-		this.setColorAtIndex(p,i, r,g,b,a);
+		this.setColorAtIndex(p,i,c);
 	},
 	
 	//--------------------------------------

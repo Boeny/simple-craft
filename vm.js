@@ -16,25 +16,16 @@ var App = function(elem){
 
 App.prototype = {
 	points_count: 200,
-	radius: 50,
+	radius: 100,
 	frames_count: 1000,
-	mass: 0.00001,
+	mass: 0.0001,
 	
 	tail: 10,// px
-	collision_distance: 0.5,
-	
-	//temp_ergy: 0.001,
-	//close_mult: 10,
+	collision_distance: 1,
 	temp_color_inc: 50,
 	
 	history: [],
 	frame: 0,
-
-	c: null,
-	bar: null,
-	restart_btn: null,
-	x: 0,
-	y: 0,
 	points: [],
 	
 	//------------------------
@@ -50,6 +41,7 @@ App.prototype = {
 	restart: function(){
 		this.stop();
 		this.frame = 1;
+		this.img = this.c.createData(this.width, this.height);
 		this.resume();
 	},
 	
@@ -125,11 +117,14 @@ App.prototype = {
 		}
 	},
 	
-	inScr: function(x,y){
-		if (y === undefined){
-			y = x.y;
-			x = x.x;
+	inScr: function(_x,y){
+		var x;
+		if (typeof _x == 'object'){
+			y = _x.y;
+			x = _x.x;
 		}
+		else x = _x;
+		
 		return x > 0 && x < this.width && y > 0 && y < this.height;
 	},
 	
@@ -140,7 +135,6 @@ App.prototype = {
 		for (var i in this.points){
 			p = vwith(this.points[i], (coo) => Math.round(coo));
 			if (!this.inScr(p)) continue;
-			
 			if (data[p.y] && data[p.y][p.x])
 			{
 				c = data[p.y][p.x].r + this.temp_color_inc;
@@ -166,12 +160,15 @@ App.prototype = {
 			opacity = i*step;
 			
 			for (var y in old)
-			for (var x in old[y]){
+			for (var x in old[+y]){
+				x = +x;
+				y = +y;
+				
 				if (!data[y] || !data[y][x])
 				{
 					check_obj(data, y, {});
-					//c = this.c.getColorAt(this.img, x, y);
-					data[y][x] = {r: 0, g: 0, b: 0, a: opacity};
+					c = this.c.getColorAt(this.img, x, y);
+					data[y][x] = {r: c.r, g: c.g, b: c.b, a: opacity};
 				}
 			}
 			
@@ -231,11 +228,9 @@ App.prototype = {
 			return;
 		}
 		
-		var p;
 		for (var y in data)
-		for (var x in data[y]){
-			p = data[y][x];
-			this.c.setColorAt(this.img, x, y, p.r, p.g, p.b, p.a);
+		for (var x in data[+y]){
+			this.c.setColorAt(this.img, +x, +y, data[+y][+x]);
 		}
 		
 		this.c.putData(this.img);
