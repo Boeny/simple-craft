@@ -6,6 +6,9 @@ var App = function(elem){
 	this.c.DOM.width = this.width = $(window).width();
 	this.c.DOM.height = this.height = $(window).height();
 	
+	this.outer_grav = vget(this.width/2, this.height/2 + 1000);
+	this.outer_mult = 0.01;
+
 	this.bar = $('#bar');
 	this.restart_btn = $('.restart');
 	
@@ -17,11 +20,11 @@ var App = function(elem){
 App.prototype = {
 	points_count: 200,
 	radius: 100,
-	frames_count: 1000,
-	mass: 0.0001,
+	frames_count: 500,
+	mass: 0,
 	
 	tail: 10,// px
-	collision_distance: 1,
+	collision_distance: 0.5,
 	temp_color_inc: 50,
 	
 	history: [],
@@ -82,6 +85,16 @@ App.prototype = {
 			true
 		);
 	},
+
+	addOuterGrav: function(p){
+		var d = vsub(this.outer_grav, p, true);
+		var l = vlen(d);
+		
+		if (l < this.collision_distance) return;
+
+		vmult(d, this.outer_mult/l);
+		vadd(p.speed, d);
+	},
 	
 	process: function(){
 		var p, p2, l, d;
@@ -112,8 +125,12 @@ App.prototype = {
 					p2.speed = vcopy(d);
 				}
 			}
+
+			this.addOuterGrav(p);
 			
 			vadd(p, p.speed);
+
+			if (p.y > this.height) p.y = this.height - 10;
 		}
 	},
 	
@@ -128,17 +145,38 @@ App.prototype = {
 		return x > 0 && x < this.width && y > 0 && y < this.height;
 	},
 	
+	setTail: function(data, frame){
+		var old, opacity;                                var step = Math.round(255/this.tail);                                                                                                              var t = frame - this.tail;                       if (t < 0) t = 0;
+                var i = 0;                                       var c;
+
+                do {
+                        old = this.history[t];
+                        opacity = i*step;
+
+                        for (var y in old)
+                        for (var x in old[+y]){
+                                x = +x;                                          y = +y;
+
+				if (!data[y] || !data[y][x])                                                                      {                                                        check_obj(data, y, {});                                                                           c = this.c.getColorAt(this.img, x, y);
+                                        data[y][x] = {r: c.r, g: c.g, b: c.b, a: opacity};                                        }
+                        }
+
+                        i++;
+                        t++;
+                }                                                while(t < frame);
+	},
+
 	copyPoints: function(frame){
 		var data = {};
-		var p, c;
+		var p, red;
 		
 		for (var i in this.points){
 			p = vwith(this.points[i], (coo) => Math.round(coo));
 			if (!this.inScr(p)) continue;
 			if (data[p.y] && data[p.y][p.x])
 			{
-				c = data[p.y][p.x].r + this.temp_color_inc;
-				data[p.y][p.x].r = c > 255 ? 255 : c;
+				red = data[p.y][p.x].r + this.temp_color_inc;
+				data[p.y][p.x].r = red > 255 ? 255 : red;
 			}
 			else{
 				check_obj(data, p.y, {});
@@ -148,34 +186,7 @@ App.prototype = {
 		
 		if (!frame) return data;
 		
-		var old, opacity;
-		var step = Math.round(255/this.tail);
-		
-		var t = frame - this.tail;
-		if (t < 0) t = 0;
-		var i = 0;
-		
-		do {
-			old = this.history[t];
-			opacity = i*step;
-			
-			for (var y in old)
-			for (var x in old[+y]){
-				x = +x;
-				y = +y;
-				
-				if (!data[y] || !data[y][x])
-				{
-					check_obj(data, y, {});
-					c = this.c.getColorAt(this.img, x, y);
-					data[y][x] = {r: c.r, g: c.g, b: c.b, a: opacity};
-				}
-			}
-			
-			i++;
-			t++;
-		}
-		while(t < frame);
+		this.setTail(data, frame);
 		
 		return data;
 	},
@@ -183,13 +194,14 @@ App.prototype = {
 	calc: function(frames){
 		frames = frames || this.frames_count;
 		this.history.push(this.copyPoints());
-		
 		var l = this.bar.parent().width();
+		var step = Math.round(frames / l);
+		if (step < 1) step = 1;
 		
 		var _data = {
 			index: 0,
 			frames: frames,
-			bar_length: Math.round(frames / l),
+			bar_step: step,
 			bar_koef: l / frames
 		};
 		
@@ -199,12 +211,12 @@ App.prototype = {
 	calcStep: function(_data){
 		if (_data.index < _data.frames)
 		{
-			for (var i=1; i <= _data.bar_length; i++){
+			for (var i=1; i <= _data.bar_step; i++){
 				this.process();
 				this.history.push(this.copyPoints(_data.index + i));
 			}
 			
-			_data.index += _data.bar_length;
+			_data.index += _data.bar_step;
 			this.bar.width(_data.bar_koef * _data.index);
 		}
 		else{
@@ -222,7 +234,6 @@ App.prototype = {
 	//-----------------------------------------------------
 	update: function(){
 		var data = this.history[this.frame];
-		
 		if (!data){
 			this.stop();
 			return;
@@ -230,7 +241,9 @@ App.prototype = {
 		
 		for (var y in data)
 		for (var x in data[+y]){
-			this.c.setColorAt(this.img, +x, +y, data[+y][+x]);
+			x = +x;
+			y = +y;
+			this.c.setColorAt(this.img, x, y, data[y][x]);
 		}
 		
 		this.c.putData(this.img);
