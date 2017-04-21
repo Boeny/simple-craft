@@ -7,7 +7,7 @@ var App = function(elem){
 	this.c.DOM.height = this.height = $(window).height();
 	
 	this.outer_grav = vget(this.width/2, this.height/2 + 1000);
-	this.outer_mult = 0.01;
+	this.outer_mult = 0;//0.01;
 
 	this.bar = $('#bar');
 	this.restart_btn = $('.restart');
@@ -19,11 +19,12 @@ var App = function(elem){
 
 App.prototype = {
 	points_count: 200,
-	radius: 100,
+	radius: 50,
 	frames_count: 500,
-	mass: 0,
+	mass: 0.000005,
+	repulse: 0.001,
 	
-	tail: 10,// px
+	tail: 1,// px
 	collision_distance: 0.5,
 	temp_color_inc: 50,
 	
@@ -87,11 +88,13 @@ App.prototype = {
 	},
 
 	addOuterGrav: function(p){
+		if (!this.outer_mult) return;
+		
 		var d = vsub(this.outer_grav, p, true);
 		var l = vlen(d);
 		
 		if (l < this.collision_distance) return;
-
+		
 		vmult(d, this.outer_mult/l);
 		vadd(p.speed, d);
 	},
@@ -115,14 +118,14 @@ App.prototype = {
 					vsub(p2.speed, d);
 				}
 				else{// collision
-					d = vmult(vwith(d, (coo) => this.getSign(coo)), this.collision_distance - l, true);
+					vmult(d, -this.repulse/l);
 					
-					vsub(p, d);
-					vadd(p2, d);
+					vadd(p.speed, d);
+					vsub(p2.speed, d);
 					
-					d = vmult(vadd(p.speed, p2.speed, true), 0.5, true);
-					p.speed = vcopy(d);
-					p2.speed = vcopy(d);
+					//d = vmult(vadd(p.speed, p2.speed, true), 0.5, true);
+					//p.speed = vcopy(d);
+					//p2.speed = vcopy(d);
 				}
 			}
 
@@ -130,7 +133,7 @@ App.prototype = {
 			
 			vadd(p, p.speed);
 
-			if (p.y > this.height) p.y = this.height - 10;
+			if (this.outer_mult && p.y > this.height) p.y = this.height - 10;
 		}
 	},
 	
@@ -146,6 +149,8 @@ App.prototype = {
 	},
 	
 	setTail: function(data, frame){
+		if (!this.tail) return;
+		
 		var old, opacity;                                var step = Math.round(255/this.tail);                                                                                                              var t = frame - this.tail;                       if (t < 0) t = 0;
                 var i = 0;                                       var c;
 
