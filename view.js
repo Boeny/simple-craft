@@ -3,8 +3,9 @@ var h = require('./html');
 var content = h.canvas({id: 'canvas'});
 content += h.div(
 	h.div(h.div({'id': 'bar', 'class': 'w_0 h_16 bk_blue'}), {'class': 'w_100 b'})+
-	h.button('restart', {'class': 'restart', style: 'display: none'}),
-
+	h.button('restart', {'class': 'restart', style: 'display: none'})+
+	h.span({id: 'counter'}),
+	
 	{'class': 'abs top'}
 );
 

@@ -6,8 +6,8 @@ function createModule(name){
 	return '(function(global){var module = {exports: {}};'+fs.readFileSync(__dirname+'/'+name+'.js', 'utf-8')+'return module.exports;})(window);';
 }
 
-module.exports = function(content, response){
-	response.end(h.type+
+module.exports = function(content){
+	return h.type+
 		h.html(
 			h.head(
 				h.getMetas()+
@@ -18,6 +18,5 @@ module.exports = function(content, response){
 				h.script('var Canvas = '+createModule('canvas'))
 			)+
 			h.body(content)
-		)
-	);
+		);
 };

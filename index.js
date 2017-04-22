@@ -1,8 +1,6 @@
 require('./base');
-var layout = require('./layout');
-var view = require('./view');
+var router = require('./router');
 
-module.exports = function(p, response){
-	if (p == '/favicon.ico')return;
-	layout(view.content, response);
+module.exports = function(path, response){
+	response.end(router(path));
 };

@@ -1,30 +1,31 @@
 'use strict';
 
+window.onerror = function (msg, url, line) {
+	alert(msg + "\n" + url + "\n" + "\n" + line);
+	return true;
+};
+
 var App = function(elem){
 	this.c = new Canvas(elem);
 
 	this.c.DOM.width = this.width = $(window).width();
 	this.c.DOM.height = this.height = $(window).height();
-	
-	this.outer_grav = vget(this.width/2, this.height/2 + 1000);
-	this.outer_mult = 0;//0.01;
 
 	this.bar = $('#bar');
+	this.counter = $('#counter');
 	this.restart_btn = $('.restart');
 	
 	this.img = this.c.createData(this.width, this.height);
-	this.setRandomPoints(this.img, this.points_count);
-	this.c.putData(this.img);
+	this.calc();
 };
 
 App.prototype = {
-	points_count: 200,
-	radius: 50,
-	frames_count: 500,
-	mass: 0.000005,
-	repulse: 0.001,
+	points_count: 300,
+	radius: 30,
+	frames_count: 5000,
+	mass: 0,//0.000005,
 	
-	tail: 1,// px
+	tail: 10,// px
 	collision_distance: 0.5,
 	temp_color_inc: 50,
 	
@@ -53,7 +54,7 @@ App.prototype = {
 	
 	setRandomPoints: function(data, count){
 		var w2 = this.width/2;
-		var h2 = this.height/2;
+		var h2 = this.height - this.radius;
 		var r = this.radius || Math.min(w2/2,h2/2);
 		var v;
 		
@@ -112,20 +113,21 @@ App.prototype = {
 				l = vlen(d);
 				
 				if (l > this.collision_distance){
-					vmult(d, this.mass/l);
-					
-					vadd(p.speed, d);
-					vsub(p2.speed, d);
+					if (this.mass){
+						vmult(d, this.mass/l);
+						vadd(p.speed, d);
+						vsub(p2.speed, d);
+					}
 				}
 				else{// collision
-					vmult(d, -this.repulse/l);
+					vmult(d, (l-this.collision_distance)/l);// normalize and set the backward direction
 					
-					vadd(p.speed, d);
-					vsub(p2.speed, d);
+					vadd(p, d);
+					vsub(p2, d);
 					
-					//d = vmult(vadd(p.speed, p2.speed, true), 0.5, true);
-					//p.speed = vcopy(d);
-					//p2.speed = vcopy(d);
+					d = vmult(vadd(p.speed, p2.speed, true), 0.4, true);
+					p.speed = vcopy(d);
+					p2.speed = vcopy(d);
 				}
 			}
 
@@ -133,7 +135,8 @@ App.prototype = {
 			
 			vadd(p, p.speed);
 
-			if (this.outer_mult && p.y > this.height) p.y = this.height - 10;
+			if (this.outer_mult && p.y > this.height)
+				p.y = 2*this.height - p.y;
 		}
 	},
 	
@@ -198,8 +201,18 @@ App.prototype = {
 	
 	calc: function(frames){
 		frames = frames || this.frames_count;
-		this.history.push(this.copyPoints());
-		var l = this.bar.parent().width();
+		$.ajax({
+			url: '/calc?width='+this.width+'&height='+this.height+'&bar_length='+this.bar.parent().width()+'&frames='+frames,
+			dataType: 'json',
+			success: (res) => {
+				this.history.push(res.data);
+				if (res.index <  frames)
+					this.calc();
+				else
+					this.stopCalc();
+			}
+		});
+		
 		var step = Math.round(frames / l);
 		if (step < 1) step = 1;
 		
@@ -209,13 +222,9 @@ App.prototype = {
 			bar_step: step,
 			bar_koef: l / frames
 		};
-		
-		this.calc_timer = setInterval(() => {this.calcStep(_data)}, 20);
 	},
 	
 	calcStep: function(_data){
-		if (_data.index < _data.frames)
-		{
 			for (var i=1; i <= _data.bar_step; i++){
 				this.process();
 				this.history.push(this.copyPoints(_data.index + i));
@@ -223,15 +232,10 @@ App.prototype = {
 			
 			_data.index += _data.bar_step;
 			this.bar.width(_data.bar_koef * _data.index);
-		}
-		else{
-			this.stopCalc();
-		}
+			this.counter.html(_data.index+'/'+_data.frames);
 	},
 	
 	stopCalc: function(){
-		clearInterval(this.calc_timer);
-		this.points = null;
 		this.frame = 1;
 		this.restart_btn.show();
 	},
@@ -252,6 +256,7 @@ App.prototype = {
 		}
 		
 		this.c.putData(this.img);
+		this.counter.html(this.frame);
 		
 		this.frame++;
 	}
@@ -270,6 +275,4 @@ $(function(){
 	$('.restart').on('click', function(){
 		app.restart();
 	});
-	
-	app.calc();
 });
