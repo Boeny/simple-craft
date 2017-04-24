@@ -20,18 +20,9 @@ var App = function(elem){
 };
 
 App.prototype = {
-	points_count: 300,
-	radius: 30,
 	frames_count: 5000,
-	mass: 0,//0.000005,
-	
-	tail: 10,// px
-	collision_distance: 0.5,
-	temp_color_inc: 50,
-	
 	history: [],
 	frame: 0,
-	points: [],
 	
 	//------------------------
 	stop: function(){
@@ -51,7 +42,6 @@ App.prototype = {
 	},
 	
 	//-----------------------------------------------
-	
 	calc: function(){
 		var frames = this.frames_count;
 		var bar_length = this.bar.parent().width();
