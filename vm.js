@@ -47,7 +47,13 @@ App.prototype = {
 		var bar_length = this.bar.parent().width();
 		
 		$.ajax({
-			url: '/calc?width='+this.width+'&height='+this.height+'&frames='+frames,
+			url: '/calc',
+			type: 'post',
+			data:{
+				width:this.width,
+				height:this.height,
+				frames:frames
+			},
 			dataType: 'json',
 			success: (res) => {
 				this.history.push(res.data);
