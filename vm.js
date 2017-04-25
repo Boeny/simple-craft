@@ -1,10 +1,5 @@
 'use strict';
 
-window.onerror = function (msg, url, line) {
-	alert(msg + "\n" + url + "\n" + "\n" + line);
-	return true;
-};
-
 var App = function(elem){
 	this.c = new Canvas(elem);
 
@@ -56,6 +51,7 @@ App.prototype = {
 			},
 			dataType: 'json',
 			success: (res) => {
+				alert(res);
 				this.history.push(res.data);
 				
 				this.bar.width(bar_length * res.index / frames);

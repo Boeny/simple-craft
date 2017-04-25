@@ -5,17 +5,25 @@ function createModule(name){
 	return '(function(global){var module = {exports: {}};'+__server.read(__dirname+'/'+name)+'return module.exports;})(window);';
 }
 
+var vars = ['','','h','Canvas'];
+var files = ['mobile_err','base','html','canvas'];
+var modules = '';
+var v;
+
+for (var i in files){
+	v = vars[i];
+	if (v) v = 'var '+v+' = ';
+	modules += h.script(v + createModule(files[i]));
+}
+
 module.exports = function(content){
-	return h.type+
+	return  h.type+
 		h.html(
 			h.head(
 				h.getMetas()+
 				h.style()+
-				h.script({src: external})+
-				h.script(createModule('base'))+
-				h.script('var h = '+createModule('html'))+
-				h.script('var Canvas = '+createModule('canvas'))
+				h.script({src: external})
 			)+
-			h.body(content)
+			h.body(modules + content)
 		);
 };

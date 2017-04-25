@@ -35,20 +35,19 @@ module.exports = {
 		'cell':'iblock center b w_50 h_50 lh_3'
 	},
 	
-	parseClasses: function(cls, for_each_style_do){
+	parseClasses: function(cls, for_each_class_do){
 		if (!cls) return;
 		
 		var elem_classes = cls.split(' ');
-		var classes = Object.keys(this.result_styles);
+		var existing_classes = Object.keys(this.result_styles);
 		
 		for (var elem_class in elem_classes){
-			this.parseOne(elem_classes[elem_class]);// index to value
+			if (elem_class && !in_array(elem_class, existing_classes))
+				this.parseOne(elem_classes[elem_class], for_each_class_do);
 		}
 	},
 	
-	parseOne: function(elem_class){
-		if (!elem_class || in_array(elem_class,classes)) return;
-		
+	parseOne: function(elem_class, for_each_class_do){
 		var found = false;
 		var regexp, params, replaced;
 		
@@ -61,7 +60,7 @@ module.exports = {
 				found = true;
 				replaced = elem_class.replace(regexp, params);
 				
-				if (foreach_class_do)
+				if (for_each_class_do)
 					foreach_class_do(elem_class, replaced);
 				else
 					this.result_styles[elem_class] = replaced;
@@ -71,9 +70,9 @@ module.exports = {
 		if (found) return;
 		
 		// combine params of the multiple classes
-		for (var i in combined){
+		for (var i in this.combined){
 			if (elem_class.match(new RegExp(i,'g'))){
-				this.setStyle(i, combined[i]);
+				this.setStyle(i, this.combined[i]);
 			}
 		}
 	},

@@ -12,7 +12,10 @@ var calc = {
 	collision_distance: 0.5,
 	temp_color_inc: 50,
 	
-	init: function(params){
+	init: function(){
+		var params = __server.POST;
+		if (!params) return '';
+
 		this.width = params.width;
 		this.height = params.height;
 		
