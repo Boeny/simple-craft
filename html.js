@@ -1,39 +1,4 @@
-var result_styles = {};
-var styles = {
-	'^app':'width:100%;height:100%',
-	'^abs':'position:absolute',
-	'^fix':'position:fixed',
-	'^rel':'position:relative',
-	'^top':'top:0',
-	'^bottom':'bottom:0',
-	'^right':'right:0',
-	'^left':'left:0',
-	'^mid':'top:50%;left:50%',
-	
-	'^m_(.*)':'margin:$1px',
-	'^p_(.*)':'padding:$1px',
-	
-	'^w_(.*)':'width:$1px',
-	'^h_(.*)':'height:$1px',
-	
-	'^bk_(.*)':'background:$1',
-	'^c_(.*)':'color:$1',
-	
-	'^b$':'border:1px solid #aaa',
-	'^bc_(.*)':'border-color:$1',
-	'^b_(.*)_(.*)':'border-$1:1px solid $2',
-	
-	'^iblock':'display:inline-block',
-	'^block':'display:block',
-	
-	'^center':'text-align:center',
-	'lh_(.*)':'line-height:$1',
-	'lhp_(.*)':'lie-height:$1px'
-};
-
-var combined = {
-	'cell':'iblock center b w_50 h_50 lh_3'
-};
+var Styler = require('./styler');
 
 module.exports = {
 	getOptions: function(o){
@@ -51,36 +16,7 @@ module.exports = {
 		}
 		return content;
 	},
-	parseClass: function(cls, foreach_class_do){
-		if (!cls) return;
-		
-		var elem_classes = cls.split(' ');
-		var classes = Object.keys(result_styles);
-		var regexp;
-		
-		for (var elem_class in elem_classes)
-		{
-			elem_class = elem_classes[elem_class];// index to value
-			if (!elem_class || in_array(elem_class,classes)) continue;
-			
-			var found = false;
-			for (var i in styles)
-			{
-				regexp = new RegExp(i,'g');
-				if (elem_class.match(regexp)){
-					found = true;
-					foreach_class_do(elem_class, elem_class.replace(regexp, styles[i]));
-				}
-			}
-			
-			if (found) continue;
-			for (var i in combined){
-				if (elem_class.match(new RegExp(i,'g'))){
-					this.setStyle(i, combined[i]);
-				}
-			}
-		}
-	},
+	
 	tag: function(elem, content, opt, open){
 		if (is_object(content)){
 			opt = content;
@@ -100,9 +36,7 @@ module.exports = {
 		if (opt){
 			if (!is_object(opt)) opt = {'class': opt};
 			
-			this.parseClass(opt['class'], function(cls, replace){
-				result_styles[cls] = replace;
-			});
+			Styler.parseClasses(opt['class']);
 			
 			if (is_object(opt.style)) opt.style = this.getStyleOptions(opt.style);
 			
@@ -117,18 +51,17 @@ module.exports = {
 				this.meta({'http-equiv': 'X-UA-Compatible', content: 'IE=edge'})+
 				this.meta({name: 'viewport', content: 'width=device-width, initial-scale=1'});
 	},
-	setStyle: function(name, selector){
-		result_styles[name] = '';
-		
-		this.parseClass(selector, function(cls, replace){
-			result_styles[name] += replace.replace(/;$/,'')+';';
-		});
-	},
+	
 	style: function(){
 		var content = '';
-		for (var elem_class in result_styles){
-			content += '.'+elem_class+'{'+result_styles[elem_class]+'}';
+		var params;
+		
+		for (var elem_class in Styler.result_styles)
+		{
+			params = Styler.result_styles[elem_class];
+			content += '.'+elem_class+'{'+params+'}';
 		}
+		
 		return this.tag('style', content);
 	},
 	
@@ -226,35 +159,5 @@ module.exports = {
 	},
 	form: function(content, opt){
 		return this.tag('form', content, opt);
-	},
-	
-	getSelectOptions: function(arr){
-		if (!is_('object', arr)) return arr || '';
-		
-		var content = '';
-		
-		for (var o in arr)
-			content += this.tag('option', arr[o], {value: o});
-		
-		return content;
-	},
-	getSelectedText: function(elem){
-		elem = $(elem);
-		return elem.find('option[value="'+elem.val()+'"]').text();
-	},
-	getSelectFirstVal: function(elem){
-		return elem.find('option:first-of-type').attr('value');
-	},
-	getSelectValByText: function(elem, text){
-		var v = 0;
-		
-		elem.children().each(function(){
-			if ($(this).text() == text){
-				v = $(this).attr('value');
-				return false;
-			}
-		});
-		
-		return v;
 	}
 };
