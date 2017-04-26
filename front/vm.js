@@ -7,11 +7,12 @@ var App = function(elem){
 	this.c.DOM.height = this.height = $(window).height();
 
 	this.bar = $('#bar');
+	this.bar_koef = this.bar.parent().width()/this.frames_count;
 	this.counter = $('#counter');
 	this.restart_btn = $('#restart');
 	
 	this.clear();
-	this.calc(this.bar.parent().width(), {
+	this.calc({
 		width: this.width,
 		height: this.height
 	});
@@ -43,7 +44,7 @@ App.prototype = {
 	},
 	
 	//-----------------------------------------------
-	calc: function(bar_length, data){
+	calc: function(data){
 		$.ajax({
 			url: '/calc',
 			type: 'post',
@@ -60,12 +61,12 @@ App.prototype = {
 				
 				this.render(arr_last(result));
 				
-				this.bar.width(bar_length * this.calc_index / this.frames_count);
+				this.bar.width(this.bar_koef * this.calc_index);
 				this.counter.html(this.calc_index+'/'+this.frames_count);
 				
 				if (this.calculating && this.calc_index < this.frames_count)
 				{
-					this.calc(bar_length);
+					this.calc();
 				}
 				else{
 					this.stopCalc();
