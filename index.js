@@ -1,6 +1,8 @@
-require('./base');
-var router = require('./router');
+global.ROOT = __dirname;
+global.MODULES = ROOT+'/modules';
+
+require(MODULES+'/base');
 
 module.exports = function(path, response){
-	response.end(router(path));
+	response.end(require(ROOT+'/router')(path));
 };

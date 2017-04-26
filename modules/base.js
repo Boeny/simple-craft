@@ -105,6 +105,8 @@ global.in_array = function(a, arr){
 		for (var i in a)
 			if (in_array(a[i], arr))
 				return true;
+		
+		return false;
 	}
 	return arr.indexOf(a) !== -1;
 };
@@ -149,8 +151,7 @@ global.array_to_select = function(a, index_to_int){
  * @returns {Boolean}
  */
 global.in_str = function(s, str){
-	if (is_array(s))
-	{
+	if (is_array(s)){
 		for (var i in s)
 			if (in_str(s[i], str))
 				return true;

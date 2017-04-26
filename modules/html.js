@@ -1,4 +1,4 @@
-var Styler = require('./styler');
+var Styler = global.ROOT ? require(MODULES+'/styler') : null;
 
 module.exports = {
 	getOptions: function(o){
@@ -36,7 +36,7 @@ module.exports = {
 		if (opt){
 			if (!is_object(opt)) opt = {'class': opt};
 			
-			Styler.parseClasses(opt['class']);
+			Styler && Styler.parseClasses(opt['class']);
 			
 			if (is_object(opt.style)) opt.style = this.getStyleOptions(opt.style);
 			
@@ -44,12 +44,6 @@ module.exports = {
 		}
 		
 		return '<'+elem + opthtml + (open ? '/' : '')+'>' + (open ? '' : content+'</'+elem+'>');
-	},
-	
-	getMetas: function(){
-		return	this.meta({charset: 'utf-8'})+
-				this.meta({'http-equiv': 'X-UA-Compatible', content: 'IE=edge'})+
-				this.meta({name: 'viewport', content: 'width=device-width, initial-scale=1'});
 	},
 	
 	style: function(){
@@ -63,6 +57,12 @@ module.exports = {
 		}
 		
 		return this.tag('style', content);
+	},
+	
+	getMetas: function(){
+		return	this.meta({charset: 'utf-8'})+
+				this.meta({'http-equiv': 'X-UA-Compatible', content: 'IE=edge'})+
+				this.meta({name: 'viewport', content: 'width=device-width, initial-scale=1'});
 	},
 	
 	br: '<br>',
