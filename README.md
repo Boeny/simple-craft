@@ -1,4 +1,4 @@
-# simple-craft
+# simple-demo
 simple browser demo project with canvas
 
 Based on the Simple-server, just set "{port: path/to/index.js}" in the "SERVER_ROOT/config/hosts.js";
