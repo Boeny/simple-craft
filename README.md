@@ -1,6 +1,7 @@
 # simple-craft
 simple browser demo project with canvas
-Working on Simple-server, just write the {port: path/to/index.js} to the config/hosts.js at the server's root folder;
+
+Based on the Simple-server, just set "{port: path/to/index.js}" in the "SERVER_ROOT/config/hosts.js";
 
 How to use
 
