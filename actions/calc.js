@@ -17,7 +17,7 @@ module.exports = {
 	
 	// main process
 	step: function(){
-		this.initialized = !obj_length(__server.POST);
+		this.initialized = !__server.POST || !obj_length(__server.POST);
 		
 		var data = [];
 		
