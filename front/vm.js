@@ -23,7 +23,7 @@ App.prototype = {
 	frames_count: 1000,
 	history: [],
 	play_index: 0,
-	tail: 10,// px
+	tail: 0,// px
 	calculating: true,
 	light_map: {},
 	

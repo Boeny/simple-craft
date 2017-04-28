@@ -37,7 +37,6 @@ module.exports = {
 			this.init();
 			result.data.push(this.getFramePoints());
 			result.light = light.apply(this.width, this.height);
-			this.initialized = true;
 		}
 		
 		return result;// data is an array of the frames
