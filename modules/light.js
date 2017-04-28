@@ -1,10 +1,13 @@
 module.exports = {
 	light: vget(-10,-10),
 	power: 255,
-	radius: 100,
+	radius: 10,
 	color: {r:255,g:255,b:255},
 
 	apply: function(width, height){
+		this.width = width;
+		this.height = height;
+		
 		var mult = this.power*this.radius;
 		var len;
 		var data = {};
@@ -14,10 +17,14 @@ module.exports = {
 			check_obj(data, y, {});
 			
 			len = vlen(vsub(this.light, vget(x,y), true));
-			this.color.a = len > this.radius ? mult/len : this.power;
+			this.color.a = len > this.radius ? mult/Math.sqrt(len) : this.power;
 			data[y][x] = vcopy(this.color);
 		}
 		
 		return data;
+	},
+	
+	shadows: function(data){
+		
 	}
 };

@@ -25,9 +25,12 @@ module.exports = {
 		
 		if (this.initialized)
 		{
+			var frame_data;
 			for (var i=0; i<this.count; i++){
 				this.process();
-				result.data.push(this.getFramePoints());
+				frame_data = this.getFramePoints();
+				light.shadows(frame_data);
+				result.data.push(frame_data);
 			}
 		}
 		else{
