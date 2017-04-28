@@ -29,14 +29,14 @@ module.exports = {
 			for (var i=0; i<this.count; i++){
 				this.process();
 				frame_data = this.getFramePoints();
-				light.shadows(frame_data);
+				frame_data = light.shadows(frame_data);
 				result.data.push(frame_data);
 			}
 		}
 		else{
 			this.init();
 			result.data.push(this.getFramePoints());
-			result.light = light.apply(this.width, this.height);
+			result.light = light.apply(this.width, this.height, this.inScr);
 		}
 		
 		return result;// data is an array of the frames
