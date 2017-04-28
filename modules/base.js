@@ -47,7 +47,9 @@ global.vwith = function(v, func){
 	return vget(func(v.x), func(v.y));
 };
 global.vcopy = function(v){
-	return vget(v.x, v.y);
+	var res = {};
+	for (var f in v) res[f] = v[f];
+	return res;
 };
 global.vget = function(x, y){
 	vcheck(x);
