@@ -148,7 +148,7 @@ App.prototype = {
 $(function(){
 	var app = new App('#canvas');
 	
-	$(document).on('click', '#canvas', function(){
+	$(document).on('mousedown', '#canvas', function(){
 		if (app.timer)
 			app.stop();
 		else
