@@ -35,6 +35,24 @@ global.randomInCircle = function(x, y, r, _float){
 };
 
 //------------------------------------ VECTORS
+global.in_range = function(v, min, max){
+	return v > min && v < max;
+};
+global.vmin = function(v1, v2){
+	if (is_array(v1)){
+		v2 = v1[1];
+		v1 = v1[0];
+	}
+	return vget(Math.min(v1.x, v2.x), Math.min(v1.y, v2.y));
+};
+global.vmax = function(v1, v2){
+	if (is_array(v1)){
+		v2 = v1[1];
+		v1 = v1[0];
+	}
+	return vget(Math.max(v1.x, v2.x), Math.max(v1.y, v2.y));
+};
+
 global.vcheck = function(num){
 	if (typeof num !== 'number')
 		throw TypeError(arguments.callee+' error: coo must be a number!');
@@ -56,8 +74,15 @@ global.vget = function(x, y){
 	vcheck(y);
 	return {x: x, y: y};
 };
-global.vlen = function(a){
+global.vlen = function(a,b){
+	if (b) vsub(a,b);
 	return Math.sqrt(a.x*a.x + a.y*a.y);
+};
+global.vset = function(v, num, ret){
+	return vmult(v, num/vlen(v), ret);
+};
+global.vnorm = function(v, ret){
+	return vset(v, 1, ret);
 };
 global.tov = function(v){
 	return is_object(v) ? v : vuno(v);
