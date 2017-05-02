@@ -23,21 +23,20 @@ module.exports = {
 	step: function(){
 		this.initialized = !__server.POST || !obj_length(__server.POST);
 		
-		var result = [];
+		var result = {data: []};
 		
 		if (this.initialized)
 		{
 			for (var i=0; i<this.count; i++){
 				this.process();
-				this.light.apply(this.data);
-				result.push(this.data);
+				result.data.push(this.data);
 			}
 		}
 		else{
 			this.init();
 			this.initProcess();
-			this.light.apply(this.data);
-			result.push(this.data);
+			result.data.push(this.data);
+			result.light = this.light.map;
 		}
 		
 		return result;// data is an array of the frames
@@ -132,14 +131,13 @@ module.exports = {
 		
 		if (!image.inScr(p)) return;
 		
-		this.light.checkMinDistance(p);
-		
 		if (image.isPoint(this.data, p))
 		{
 			this.data[p.y][p.x].r = image.clampColor(this.data[p.y][p.x].r + this.temp_color_inc);
 		}
 		else{
 			image.setColor(this.data, p);
+			this.light.apply(this.data, p);
 		}
 	}
 };

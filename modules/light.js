@@ -5,9 +5,13 @@ module.exports = function(width, height){
 		height = width.y;
 		width = width.x;
 	}
+	
 	this.width = width;
 	this.height = height;
-	this.light = vget(width + 10, -10);
+	this.light = vget(width, height);
+	this.mult = this.power * this.radius;
+	
+	this.init();
 };
 
 module.exports.prototype = {
@@ -15,39 +19,39 @@ module.exports.prototype = {
 	radius: 10,
 	color: image.getColor(255,255,255),
 	
-	apply: function(data){
-		var mult = this.power*this.radius;
-		var len, res_power, p;
-		var light_square;
+	init: function(){
+		this.map = {};
+		var len;
 		
-		for (var y=0; y<this.height; y++){
-			for (var x=0; x<this.width; x++)
-			{
-				if (image.isPoint(data, x,y)) continue;
-				
-				p = vget(x,y);
-				len = vlen(p, this.light);
-				
-				if (len > this.radius){
-					res_power = mult/Math.sqrt(len);
-					
-					if (len > this.min_distance)
-					{
-						light_square = len * this.radius;
-						res_power *= light_square / (light_square - this.getShadowSquare(data, p));
-					}
-					
-					this.color.a = res_power;
-				}
-				else{
-					this.color.a = this.power;
-				}
-				
-				image.setColor(data, x,y, vcopy(this.color));
-			}
+		for (var y=0; y<this.height; y++)
+		for (var x=0; x<this.width; x++)
+		{
+			len = vlen(vget(x,y), this.light);
 			
-			console.log('y=%d, height=%d',y,this.height);
+			this.color.a = len > this.radius ? this.mult/Math.sqrt(len) : this.power;
+			
+			image.setColor(this.map, x,y, vcopy(this.color));
 		}
+	},
+	
+	apply: function(data, p){
+		var ps = this.getCollisionPoints(this.light, p, 0.5);
+		var vs = this.getCollisionVectors(this.light, ps);
+		vs = vs.map((v) => vnorm(v, true));
+		
+		for (var i=0; image.inScr(ps[0]) && image.inScr(ps[1]); i++)
+		for (var j in ps){
+			this.setShadowPoint(data, ps[j], p);
+			vadd(ps[j], vs[j]);
+		}
+	},
+	
+	setShadowPoint: function(data, p, origin){
+		if (image.isPoint(data, p)) return;
+		
+		var len = vlen(p, this.light);
+		power_percent = 1 - this.getShadowSquare(data, p, origin)/(len * this.radius);
+		image.setColor(data, p, {r:255,g:255,b:255, a: power_percent * this.mult / Math.sqrt(len)});
 	},
 	
 	getCollisionPoints: function(source, collision_target, radius){
@@ -71,42 +75,28 @@ module.exports.prototype = {
 		];
 	},
 	
-	getShadowSquare: function(data, cur_p){
+	getShadowSquare: function(data, cur_p, p){
 		var vs = this.getCollisionVectors(cur_p, this.light, this.radius);// from this point to the light center
 		
 		var vsn = vs.map((v) => vnorm(v, true));
 		var min = vmin(vsn);
 		var max = vmax(vsn);
 		
-		var pvs, pvsn, result=0;
-		
-		for (var y in data)
-		for (var x in data[+y])
-		{
-			pvs = this.getCollisionVectors(cur_p, vget(+x,+y), 0.5);// from this point to the filled point
-			pvsn = pvs.map((v) => vnorm(v, true));
+		var result = 0;
+		var pvs = this.getCollisionVectors(cur_p, p, 0.5);// from this point to the filled point
+		var pvsn = pvs.map((v) => vnorm(v, true));
 			
-			if (this.inAngles(pvsn[0], min, max)){
-				if (this.inAngles(pvsn[1], min, max)){
-					// shadow conus into the light conus
-				}
-				else{// reduce conus to min
-					pvs[1] = vs[1];
-				}
-			}
-			else{// reduce conus to max
-				if (this.inAngles(pvsn[1], min, max)){
-					pvs[0] = vs[0];
-				}
-				else{// out of the light conus
-					continue;
-				}
-			}
-			
-			result += this.getSquare(vlen(pvs[0]), vlen(pvs[1]), vlen(pvs[0], pvs[1]));
+		if (this.inAngles(pvsn[0], min, max)){
+			if (!this.inAngles(pvsn[1], min, max))// reduce conus to min
+				pvs[1] = vs[1];
+		}
+		else{// reduce conus to max
+			if (this.inAngles(pvsn[1], min, max))
+				pvs[0] = vs[0];
+			else return 0;
 		}
 		
-		return result || 0;
+		return this.getSquare(vlen(pvs[0]), vlen(pvs[1]), vlen(pvs[0], pvs[1])) || 0;
 	},
 	
 	getSquare: function(a,b,c){
@@ -116,12 +106,5 @@ module.exports.prototype = {
 	
 	inAngles: function(v, min, max){
 		return in_range(v.x, min.x, max.x) && in_range(v.y, min.y, max.y);
-	},
-	
-	checkMinDistance: function(p){
-		var len = vlen(p, this.light);
-		
-		if (this.min_distance === undefined || len < this.min_distance)
-			this.min_distance = len;
 	}
 };
