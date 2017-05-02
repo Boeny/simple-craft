@@ -51,8 +51,10 @@ App.prototype = {
 			data: data,
 			dataType: 'json',
 			success: (result) => {
-				if (result.light) this.light_map = result.light;
+				if (result.light_map) this.light_map = result.light_map;
+				
 				result = result.data;
+				
 				// save the package of the frames to the history
 				for (var i in result)
 				{
@@ -133,6 +135,7 @@ App.prototype = {
 	
 	render: function(data){
 		var l = this.light_map;
+		
 		for (var y in l)
 		for (var x in l[+y]){
 			x = +x;

@@ -36,7 +36,7 @@ module.exports = {
 			this.init();
 			this.initProcess();
 			result.data.push(this.data);
-			result.light = this.light.map;
+			result.light_map = this.light.map;
 		}
 		
 		return result;// data is an array of the frames
