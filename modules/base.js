@@ -75,7 +75,7 @@ global.vget = function(x, y){
 	return {x: x, y: y};
 };
 global.vlen = function(a,b){
-	if (b) vsub(a,b);
+	if (b) a = vsub(a, b, true);
 	return Math.sqrt(a.x*a.x + a.y*a.y);
 };
 global.vset = function(v, num, ret){
@@ -88,24 +88,21 @@ global.tov = function(v){
 	return is_object(v) ? v : vuno(v);
 };
 global.vadd = function(a, b, ret){
-	b = tov(b);
-	
+	if (!is_object(b)) b = vuno(b);
 	if (ret) return vget(a.x + b.x, a.y + b.y);
 	
 	a.x += b.x;
 	a.y += b.y;
 };
 global.vsub = function(a, b, ret){
-	b = tov(b);
-	
+	if (!is_object(b)) b = vuno(b);
 	if (ret) return vget(a.x - b.x, a.y - b.y);
 	
 	a.x -= b.x;
 	a.y -= b.y;
 };
 global.vmult = function(a, b, ret){
-	b = tov(b);
-	
+	if (!is_object(b)) b = vuno(b);
 	if (ret) return vget(a.x * b.x, a.y * b.y);
 	
 	a.x *= b.x;

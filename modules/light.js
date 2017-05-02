@@ -15,41 +15,41 @@ module.exports.prototype = {
 	
 	init: function(){
 		this.map = {};
-		var len;
+		var len, p;
 		
-		for (var y=0; y<this.size.y; y++)
-		for (var x=0; x<this.size.x; x++)
+		for (var y=0; y < this.size.y; y++)
+		for (var x=0; x < this.size.x; x++)
 		{
-			len = vlen(vget(x,y), this.light);
+			p = vget(x,y);
+			len = vlen(p, this.light);
 			
 			this.color.a = len > this.radius ? this.mult/Math.sqrt(len) : this.power;
 			
-			image.setColor(this.map, x,y, vcopy(this.color));
+			image.setColor(this.map, p, vcopy(this.color));
 		}
 	},
 	
 	apply: function(data, p){
-		var ps = this.getCollisionPoints(this.light, p, 0.5);
-		var vs = this.getCollisionVectors(this.light, ps);
+		var ps = this.getCollisionPoints(this.light, p, 0.5);// from the light to this point
+		var vs = this.getCollisionPoints(p, this.light, this.radius);// from this point to the light
 		
-		vs = vs.map((v) => vnorm(v, true));
+		vs = vs.map((v,i) => vnorm(vsub(ps[i], v, true), true));
 		
-		while (image.inScr(ps[0]) && image.inScr(ps[1])){
+		while (image.inScr(ps)){
 			for (var i in ps)
 			{
-				if (!image.isPoint(data, p))
-					this.setShadowPoint(data, ps[j], p);
+				if (!image.isPoint(data, ps[i]))
+					this.setShadowPoint(data, ps[i], p);
 				
-				vadd(ps[j], vs[j]);
+				vadd(ps[i], vs[i]);
 			}
 		}
 	},
 	
 	setShadowPoint: function(data, p, origin){
 		var len = vlen(p, this.light);
-		var power_percent = 1;// - this.getShadowSquare(data, p, origin)/(len * this.radius);
-		
-		image.setColor(data, p);//, {r: 255,g: 255,b: 255, a: power_percent * this.mult / Math.sqrt(len)});
+		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
+		image.setColor(data, p, {a: power_percent * this.mult / Math.sqrt(len)});
 	},
 	
 	getCollisionPoints: function(source, collision_target, radius){
@@ -73,28 +73,36 @@ module.exports.prototype = {
 		];
 	},
 	
-	getShadowSquare: function(data, cur_p, p){
-		var vs = this.getCollisionVectors(cur_p, this.light, this.radius);// from this point to the light center
+	getShadowSquare: function(p, origin){
+		var vs = this.getCollisionVectors(p, this.light, this.radius);// from this point to the light center
 		var vsn = vs.map((v) => vnorm(v, true));
 		
 		var min = vmin(vsn);
 		var max = vmax(vsn);
 		
-		var pvs = this.getCollisionVectors(cur_p, p, 0.5);// from this point to the filled point
+		var pvs = this.getCollisionVectors(p, origin, 0.5);// from this point to the filled point
 		var pvsn = pvs.map((v) => vnorm(v, true));
+		var len;
 		
 		if (this.inAngles(pvsn[0], min, max)){
-			if (!this.inAngles(pvsn[1], min, max))// reduce conus to min
+			if (this.inAngles(pvsn[1], min, max))// reduce conus to min
+				return 0;
+			else{
 				pvs[1] = vs[1];
+				len = vlen(pvs[1]);
+				vset(pvs[0], len);
+			}
 		}
 		else{
 			if (this.inAngles(pvsn[1], min, max))// reduce conus to max
 				pvs[0] = vs[0];
+				len = vlen(pvs[0]);
+				vset(pvs[1], len);
 			else
 				return 0;
 		}
 		
-		return this.getSquare(vlen(pvs[0]), vlen(pvs[1]), vlen(pvs[0], pvs[1])) || 0;
+		return this.getSquare(len, len, vlen(pvs[0], pvs[1])) || 0;
 	},
 	
 	getSquare: function(a,b,c){
