@@ -23,8 +23,10 @@ module.exports = {
 		return in_range(v.x, 0, this.size.x) && in_range(v.y, 0, this.size.y);
 	},
 	
-	clampColor: function(c){
-		return c > 255 ? 255 : c;
+	clampColor: function(c,min,max){
+		if (min === undefined) min = 0;
+		if (max === undefined) max = 255;
+		return c > max ? max : (c < min ? min : c);
 	},
 	
 	getColor: function(r,g,b,a){

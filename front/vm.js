@@ -29,12 +29,12 @@ App.prototype = {
 	//------------------------
 	stop: function(){
 		if (!this.timer) return;
-		clearInterval(this.timer);
 		this.timer = null;
 	},
 	resume: function(){
 		if (!this.play_index) this.stopCalc();
-		this.timer = setInterval(() => {this.update()}, 20);
+		this.timer = true;
+		this.update();
 	},
 	restart: function(){
 		this.stop();
@@ -120,6 +120,9 @@ App.prototype = {
 	
 	//-----------------------------------------------------
 	update: function(){
+		if (!this.timer) return;
+		requestAnimationFrame(() => {this.update()});
+		
 		var data = this.history[this.play_index];
 		if (!data){
 			this.stop();

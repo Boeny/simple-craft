@@ -58,14 +58,25 @@ module.exports.prototype = {
 			for (var i in ps)
 			{
 				if (!inScr[i]) continue;
-				this.borders[Math.round(ps[i].x)+'-'+Math.round(ps[i].y)] = 1;
+				
+				this.setBorder(ps[i]);
 				this.setShadowPoint(data, ps[i], point);
+				
 				vadd(ps[i], vs[i]);
 				inScr[i] = image.inScr(ps[i]);
 			}
 		}
 		
 		this.fillSector(data, vs, point);
+	},
+	
+	setBorder: function(p){
+		p = image.roundCoo(p, true);
+		this.borders[p.x+'-'+p.y] = 1;
+	},
+	getBorder: function(p){
+		p = image.roundCoo(p, true);
+		return this.borders[p.x+'-'+p.y];
 	},
 	
 	setShadowPoint: function(data, p, origin){
@@ -79,39 +90,56 @@ module.exports.prototype = {
 		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
 		
 		this.color.a = power_percent * power;
-		if (point) this.color.a -= point.a;
-		if (this.color.a < 0) this.color.a = 0;
+		if (point) this.color.a = Math.min(point.a, this.color.a);
+		
+		this.color.a = image.clampColor(this.color.a);
 		
 		image.setColor(data, p, vcopy(this.color));
 	},
 	
 	isFree: function(data, p){
-		return !this.borders[Math.round(p.x)+'-'+Math.round(p.y)] && image.inScr(p);
+		return !this.getBorder(p) && image.inScr(p);
 	},
 	
 	fillSector: function(data, vs, p){
 		vs = vadd(vs[0], vs[1], true);
 		vnorm(vs);
-		// middle point
-		var m = vadd(p, vs, true);
 		
-		while (image.inScr(m)){
-			this.fillLine(data, m, p);
-			vadd(m, vs);
+		// middle point
+		var m = vadd(p, vs, true),
+			ps = [vget(m.x, m.y-i), vget(m.x, m.y+i)],
+			isFree = ps.map((v) => this.isFree(data, v));
+			dir = [1,-1];
+		
+		while (isFree[0] || isFree[1]){
+			for (var i in ps)
+			{
+				if (!isFree[i]) continue;
+				
+				this.fillLine(data, ps[i], p);
+				
+				ps[i].y += dir[i];
+				isFree[i] = this.isFree(data, ps[i]);
+				
+				// sliding along the border
+				while(!isFree[i] && image.inScr(ps[i])){
+					ps[i].x += vs.x;
+					isFree[i] = this.isFree(data, ps[i]);
+				}
+			}
 		}
 	},
 	
 	fillRay: function(data,m,p,dir){
 		while (this.isFree(data, m)){
-			this.setShadowPoint(data,
- m, p);
+			this.setShadowPoint(data, m, p);
 			m.x += dir;
 		}
 	},
 	
 	fillLine: function(data, m, p){
-		this.fillRay(data, vget(m.x+1,m.y), p, 1);
-		this.fillRay(data, vget(m.x-1,m.y), p, -1);
+		this.fillRay(data, vget(m.x+1, m.y), p, 1);
+		this.fillRay(data, vget(m.x-1, m.y), p, -1);
 		if (this.isFree(data, m)) this.setShadowPoint(data, m, p);
 	},
 	
