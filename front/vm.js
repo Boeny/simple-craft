@@ -54,7 +54,6 @@ App.prototype = {
 				if (result.light_map) this.light_map = result.light_map;
 				
 				result = result.data;
-				
 				// save the package of the frames to the history
 				for (var i in result)
 				{

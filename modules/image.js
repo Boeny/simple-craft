@@ -39,7 +39,7 @@ module.exports = {
 			r: r || 0,
 			g: g || 0,
 			b: b || 0,
-			a: a === undefined ? 255 : 0
+			a: a === undefined ? 255 : a
 		};
 	},
 	

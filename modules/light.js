@@ -2,16 +2,32 @@ var image = require(MODULES+'/image');
 
 module.exports = function(size){
 	this.size = size;
-	this.light = size;
-	this.mult = this.power * this.radius;
-	
+	this.mult = this.power * this.distanceFunction(this.radius);
+	this.speed = vuno(0);
 	this.init();
 };
 
 module.exports.prototype = {
 	power: 255,
-	radius: 10,
+	radius: 100,
 	color: image.getColor(255,255,255),
+	
+	distanceFunction: function(d){
+		return Math.sqrt(d);
+	},
+	getPower: function(d){
+		return this.mult / this.distanceFunction(d);
+	},
+	
+	getCoo: function(){
+		return this.light;
+	},
+	setCoo: function(p){
+		this.light = vcopy(p);
+	},
+	move: function(v){
+		vadd(this.light, v || this.speed);
+	},
 	
 	init: function(){
 		this.map = {};
@@ -23,7 +39,7 @@ module.exports.prototype = {
 			p = vget(x,y);
 			len = vlen(p, this.light);
 			
-			this.color.a = len > this.radius ? this.mult/Math.sqrt(len) : this.power;
+			this.color.a = len > this.radius ? this.getPower(len) : this.power;
 			
 			image.setColor(this.map, p, vcopy(this.color));
 		}
@@ -35,21 +51,59 @@ module.exports.prototype = {
 		
 		vs = vs.map((v,i) => vnorm(vsub(ps[i], v, true), true));
 		
-		while (image.inScr(ps)){
+		var inScr = ps.map((v) => image.inScr(v));
+		
+		while (inScr[0] || inScr[1]){
 			for (var i in ps)
 			{
+				if (!inScr[i]) continue;
 				if (!image.isPoint(data, ps[i]))
 					this.setShadowPoint(data, ps[i], p);
 				
 				vadd(ps[i], vs[i]);
+				inScr[i] = image.inScr(ps[i]);
 			}
+		}
+		
+		// middle point
+		var vs = vadd(vs[0], vs[1], true);
+		vnorm(vs);
+		var m = vadd(p, vs, true);
+		
+		while (image.inScr(m)){
+			this.fillLine(data, m, p);
+			vadd(m, vs);
 		}
 	},
 	
 	setShadowPoint: function(data, p, origin){
 		var len = vlen(p, this.light);
+		var power = this.getPower(len);
+		if (power < 0.5){
+			image.setColor(data, p, {a:0});
+			return;// rounds to 0
+		}
+		
 		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
-		image.setColor(data, p, {a: power_percent * this.mult / Math.sqrt(len)});
+		image.setColor(data, p, {r:255, g:255, b:255, a:power_percent * power});
+	},
+	
+	isFree: function(data, p){
+		return !image.isPoint(data, p) && image.inScr(p);
+	},
+	
+	fillRay: function(data,m,p,dir){
+		while (this.isFree(data, m)){
+			this.setShadowPoint(data,
+ m, p);
+			m.x += dir;
+		}
+	},
+	
+	fillLine: function(data, m, p){
+		this.fillRay(data, vget(m.x+1,m.y), p, 1);
+		this.fillRay(data, vget(m.x-1,m.y), p, -1);
+		if (this.isFree(data, m)) this.setShadowPoint(data, m, p);
 	},
 	
 	getCollisionPoints: function(source, collision_target, radius){
@@ -74,7 +128,7 @@ module.exports.prototype = {
 	},
 	
 	getShadowSquare: function(p, origin){
-		var vs = this.getCollisionVectors(p, this.light, this.radius);// from this point to the light center
+		var vs = this.getCollisionVectors(p, this.light, this.radius);// from this point to the light
 		var vsn = vs.map((v) => vnorm(v, true));
 		
 		var min = vmin(vsn);
@@ -86,7 +140,7 @@ module.exports.prototype = {
 		
 		if (this.inAngles(pvsn[0], min, max)){
 			if (this.inAngles(pvsn[1], min, max))// reduce conus to min
-				return 0;
+				return 0;// impossible! we're always in the shadow or halfshadow
 			else{
 				pvs[1] = vs[1];
 				len = vlen(pvs[1]);
@@ -94,17 +148,18 @@ module.exports.prototype = {
 			}
 		}
 		else{
-			if (this.inAngles(pvsn[1], min, max))// reduce conus to max
+			if (this.inAngles(pvsn[1], min, max)){// reduce conus to max
 				pvs[0] = vs[0];
 				len = vlen(pvs[0]);
 				vset(pvs[1], len);
+			}
 			else
 				return 0;
 		}
 		
 		return this.getSquare(len, len, vlen(pvs[0], pvs[1])) || 0;
 	},
-	
+	// Geron square of the triangle
 	getSquare: function(a,b,c){
 		var p = (a+b+c)/2;
 		return Math.sqrt(p*(p-a)*(p-b)*(p-c));
