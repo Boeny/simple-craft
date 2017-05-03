@@ -52,15 +52,13 @@ module.exports.prototype = {
 		vs = vs.map((v,i) => vnorm(vsub(ps[i], v, true), true));
 		
 		var inScr = ps.map((v) => image.inScr(v));
-		var point;
 		
 		while (inScr[0] || inScr[1]){
 			for (var i in ps)
 			{
 				if (!inScr[i]) continue;
-				point = image.isPoint(data, p);
-				if (!point || point.s)
-				this.setShadowPoint(data, ps[i], p);
+				if (!image.isPoint(data, ps[i]))
+					this.setShadowPoint(data, ps[i], p);
 				vadd(ps[i], vs[i]);
 				inScr[i] = image.inScr(ps[i]);
 			}
@@ -88,9 +86,6 @@ module.exports.prototype = {
 		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
 		
 		this.color.a = power_percent * power;
-		var point = image.isPoint(data, p);
-		if (point) this.color.a -= point.a;
-		if (this.color.a < 0) this.color.a = 0;
 		image.setColor(data, p, vcopy(this.color));
 	},
 	
