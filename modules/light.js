@@ -52,14 +52,15 @@ module.exports.prototype = {
 		vs = vs.map((v,i) => vnorm(vsub(ps[i], v, true), true));
 		
 		var inScr = ps.map((v) => image.inScr(v));
+		var point;
 		
 		while (inScr[0] || inScr[1]){
 			for (var i in ps)
 			{
 				if (!inScr[i]) continue;
-				if (!image.isPoint(data, ps[i]))
-					this.setShadowPoint(data, ps[i], p);
-				
+				point = image.isPoint(data, p);
+				if (!point || point.s)
+				this.setShadowPoint(data, ps[i], p);
 				vadd(ps[i], vs[i]);
 				inScr[i] = image.inScr(ps[i]);
 			}
@@ -85,7 +86,12 @@ module.exports.prototype = {
 		}
 		
 		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
-		image.setColor(data, p, {r:255, g:255, b:255, a:power_percent * power});
+		
+		this.color.a = power_percent * power;
+		var point = image.isPoint(data, p);
+		if (point) this.color.a -= point.a;
+		if (this.color.a < 0) this.color.a = 0;
+		image.setColor(data, p, vcopy(this.color));
 	},
 	
 	isFree: function(data, p){
@@ -139,9 +145,12 @@ module.exports.prototype = {
 		var len;
 		
 		if (this.inAngles(pvsn[0], min, max)){
-			if (this.inAngles(pvsn[1], min, max))// reduce conus to min
-				return 0;// impossible! we're always in the shadow or halfshadow
-			else{
+			if (this.inAngles(pvsn[1], min, max)){
+				len = (vlen(vs[0]) + vlen(vs[1]))/2;
+				vset(pvs[0], len);
+				vset(pvs[1], len);
+			}
+			else{// reduce conus to min
 				pvs[1] = vs[1];
 				len = vlen(pvs[1]);
 				vset(pvs[0], len);
