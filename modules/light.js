@@ -45,52 +45,60 @@ module.exports.prototype = {
 		}
 	},
 	
-	apply: function(data, p){
-		var ps = this.getCollisionPoints(this.light, p, 0.5);// from the light to this point
-		var vs = this.getCollisionPoints(p, this.light, this.radius);// from this point to the light
+	apply: function(data, point){
+		var ps = this.getCollisionPoints(this.light, point, 0.5);// from the light to this point
+		var vs = this.getCollisionPoints(point, this.light, this.radius);// from this point to the light
 		
 		vs = vs.map((v,i) => vnorm(vsub(ps[i], v, true), true));
 		
 		var inScr = ps.map((v) => image.inScr(v));
+		this.borders = {};
 		
 		while (inScr[0] || inScr[1]){
 			for (var i in ps)
 			{
 				if (!inScr[i]) continue;
-				if (!image.isPoint(data, ps[i]))
-					this.setShadowPoint(data, ps[i], p);
+				this.borders[Math.round(ps[i].x)+'-'+Math.round(ps[i].y)] = 1;
+				this.setShadowPoint(data, ps[i], point);
 				vadd(ps[i], vs[i]);
 				inScr[i] = image.inScr(ps[i]);
 			}
 		}
 		
-		// middle point
-		var vs = vadd(vs[0], vs[1], true);
+		this.fillSector(data, vs, point);
+	},
+	
+	setShadowPoint: function(data, p, origin){
+		var point = image.isPoint(data, p);
+		if (point && (!point.a || point.a >= 255)) return;
+		
+		var len = vlen(p, this.light);
+		var power = this.getPower(len);
+		if (power < 0.5) return;// rounds to 0
+		
+		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
+		
+		this.color.a = power_percent * power;
+		if (point) this.color.a -= point.a;
+		if (this.color.a < 0) this.color.a = 0;
+		
+		image.setColor(data, p, vcopy(this.color));
+	},
+	
+	isFree: function(data, p){
+		return !this.borders[Math.round(p.x)+'-'+Math.round(p.y)] && image.inScr(p);
+	},
+	
+	fillSector: function(data, vs, p){
+		vs = vadd(vs[0], vs[1], true);
 		vnorm(vs);
+		// middle point
 		var m = vadd(p, vs, true);
 		
 		while (image.inScr(m)){
 			this.fillLine(data, m, p);
 			vadd(m, vs);
 		}
-	},
-	
-	setShadowPoint: function(data, p, origin){
-		var len = vlen(p, this.light);
-		var power = this.getPower(len);
-		if (power < 0.5){
-			image.setColor(data, p, {a:0});
-			return;// rounds to 0
-		}
-		
-		var power_percent = 1 - this.getShadowSquare(p, origin)/(len * this.radius);
-		
-		this.color.a = power_percent * power;
-		image.setColor(data, p, vcopy(this.color));
-	},
-	
-	isFree: function(data, p){
-		return !image.isPoint(data, p) && image.inScr(p);
 	},
 	
 	fillRay: function(data,m,p,dir){
