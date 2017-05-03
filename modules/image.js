@@ -1,9 +1,9 @@
 module.exports = {
 	roundCoo: function(p, ret){
-		if (ret) return vwith(p, (coo) => Math.round(coo));
+		if (ret) return vwith(p, (coo) => coo >> 0);
 		
-		p.x = Math.round(p.x);
-		p.y = Math.round(p.y);
+		p.x = p.x >> 0;
+		p.y = p.y >> 0;
 	},
 	
 	isPoint: function(data, v){

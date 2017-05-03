@@ -144,7 +144,7 @@ module.exports = {
 		}
 		else{
 			image.setColor(this.data, p);
-			this.light.apply(this.data, p);
+			//this.light.apply(this.data, p);
 		}
 	}
 };
