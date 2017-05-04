@@ -1,9 +1,12 @@
 var main_process = require(ROOT+'/actions/calc');
+var layout = require(ROOT+'/views/layout');
+var view = require(ROOT+'/views/index');
+var content = layout(view.content);
 
 module.exports = function(path){
 	switch (path){
 		case '/':
-			return require(ROOT+'/views/layout')(require(ROOT+'/views/index').content);
+			return content;
 		
 		case '/favicon.ico':
 			return '';

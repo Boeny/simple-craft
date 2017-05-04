@@ -10,7 +10,7 @@ var modules = '';
 var h = require('./html');
 var f, v;
 
-for (var i in files){
+for (var i=0; i<files.length; i++){
 	f = files[i];
 	v = '';
 	
@@ -20,7 +20,7 @@ for (var i in files){
 		f = f[1];
 	}
 	
-	modules += h.script(v + createModule(f));
+	modules += v + createModule(f);
 }
 
-module.exports = modules;
+module.exports = h.script(modules);

@@ -49,27 +49,19 @@ App.prototype = {
 			url: '/calc',
 			type: 'post',
 			data: data,
-			dataType: 'json',
+			dataType: 'arraybuffer',
 			success: (result) => {
-				if (result.light_map) this.light_map = result.light_map;
-				
-				result = result.data;
-				// save the package of the frames to the history
-				for (var i in result)
-				{
-					this.setTail(this.calc_index, result[i]);
-					this.history.push(result[i]);
-					this.calc_index++;
-				}
-				
-				this.render(arr_last(result));
-				
-				this.bar.width(this.bar_koef * this.calc_index);
-				this.counter.html(this.calc_index+'/'+this.frames_count);
+				this.calc_index++;
 				
 				if (this.calculating && this.calc_index < this.frames_count)
 				{
 					this.calc();
+					// save the package of the frames to the history
+					//this.setTail(this.calc_index, result);
+					//this.history.push(result);
+					//this.render(result);
+					//this.bar.width(this.bar_koef * this.calc_index);
+					//this.counter.html(this.calc_index+'/'+this.frames_count);
 				}
 				else{
 					this.stopCalc();
