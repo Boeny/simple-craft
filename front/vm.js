@@ -45,29 +45,28 @@ App.prototype = {
 	
 	//-----------------------------------------------
 	calc: function(data){
-		$.ajax({
-			url: '/calc',
-			type: 'post',
-			data: data,
-			dataType: 'arraybuffer',
-			success: (result) => {
-				this.calc_index++;
+		var xhr = new XMLHttpRequest();
+		xhr.open('POST','/calc');
+		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		xhr.responseType = 'arraybuffer';
+		xhr.onload = () => {
+			this.calc_index++;
 				
-				if (this.calculating && this.calc_index < this.frames_count)
-				{
-					this.calc();
-					// save the package of the frames to the history
-					//this.setTail(this.calc_index, result);
-					//this.history.push(result);
-					//this.render(result);
-					//this.bar.width(this.bar_koef * this.calc_index);
-					//this.counter.html(this.calc_index+'/'+this.frames_count);
-				}
-				else{
-					this.stopCalc();
-				}
+			if (this.calculating && this.calc_index < this.frames_count)
+			{
+				xhr.send();
+				// save the package of the frames to the history
+				//this.setTail(this.calc_index, result);
+				var result = new Uint8ClampedArray(xhr.response);
+				this.history.push(result);
+				this.render(result);
+				this.bar.width(this.bar_koef * this.calc_index);
+				this.counter.html(this.calc_index+'/'+this.frames_count);
 			}
-		});
+			else this.stopCalc();
+		};
+		
+		xhr.send(data);
 	},
 	
 	setTail: function(index, data){
@@ -128,16 +127,7 @@ App.prototype = {
 	},
 	
 	render: function(data){
-		var l = this.light_map;
-		
-		for (var y in l)
-		for (var x in l[+y]){
-			x = +x;
-			y = +y;
-			this.c.setColorAt(this.img, x, y, data[y] && data[y][x] || l[y][x]);
-		}
-		
-		this.c.putData(this.img);
+		this.c.putData(data);
 	},
 	
 	clear: function(){
@@ -146,6 +136,7 @@ App.prototype = {
 };
 
 $(function(){
+	alert('!');
 	var app = new App('#canvas');
 	
 	$(document).on('mousedown', '#canvas', function(){
