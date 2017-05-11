@@ -53,12 +53,17 @@ App.prototype = {
 				
 			if (this.calc_index < this.frames_count)
 			{
+				var result = xhr.response;
+				
+				xhr.open('POST','/calc');
 				xhr.send();
 				
-				// save the package of the frames to the history
-				var result = new Uint8ClampedArray(xhr.response);
+				// save the frame to the history
+				var result = new ImageData(new Uint8ClampedArray(result), this.width, this.height);
+				
 				this.history.push(result);
 				this.render(result);
+				
 				this.bar.width(this.bar_koef * this.calc_index);
 				this.counter.html(this.calc_index+'/'+this.frames_count);
 			}

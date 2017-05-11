@@ -1,53 +1,29 @@
 module.exports = {
 	roundCoo: function(p, ret){
-		if (ret) return vwith(p, (coo) => coo >> 0);
+		if (ret) return vget(p.x >> 0, p.y >> 0);
 		
 		p.x = p.x >> 0;
 		p.y = p.y >> 0;
 	},
 	
-	isPoint: function(data, v){
-		v = this.roundCoo(v, true);
-		return data[v.y] && data[v.y][v.x];
+	isPoint: function(data, p){
+		return this.getColor(data, p) > 0;// 0x...XY
 	},
 	
-	inScr: function(v){
-		if (is_array(v)){
-			for (var i in v){
-				if (!this.inScr(v[i])) return false;
-			}
-			return true;
+	inScrAll: function(arr){
+		for (var i=0; i<arr.length; i++){
+			if (!this.inScr(arr[i])) return false;
 		}
-		
-		v = this.roundCoo(v, true);
-		return in_range(v.x, 0, this.size.x) && in_range(v.y, 0, this.size.y);
+		return true;
+	},
+	inScr: function(p){
+		return in_range(p.x, 0, this.size.x) && in_range(p.y, 0, this.size.y);
 	},
 	
-	clampColor: function(c,min,max){
-		if (min === undefined) min = 0;
-		if (max === undefined) max = 255;
-		return c > max ? max : (c < min ? min : c);
+	getColor: function(data, p){
+		return data[(p.y * this.size.x + p.x) >> 0];
 	},
-	
-	getColor: function(r,g,b,a){
-		if (typeof r === 'object'){
-			a = r.a;
-			b = r.b;
-			g = r.g;
-			r = r.r;
-		}
-		
-		return {
-			r: r || 0,
-			g: g || 0,
-			b: b || 0,
-			a: a === undefined ? 255 : a
-		};
-	},
-	
-	setColor: function(data, v, c){
-		v = this.roundCoo(v, true);
-		check_obj(data, v.y, {});
-		data[v.y][v.x] = c || this.getColor();
+	setColor: function(data, p, c){
+		data[(p.y * this.size.x + p.x) >> 0] = c || 0x000000FF;// 0,0,0,255 (r,g,b,a)
 	}
 };

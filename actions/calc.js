@@ -1,7 +1,7 @@
 /**
  * Module calculates the points' positions on every request
  */
-var Light = require(MODULES+'/light');
+//var Light = require(MODULES+'/light');
 var image = require(MODULES+'/image');
 
 module.exports = {
@@ -19,7 +19,7 @@ module.exports = {
 	
 	// main process
 	step: function(){
-		var result;// = {data: []};
+		//var result = {data: []};
 		
 		if (!__server.POST || !obj_length(__server.POST))
 		{
@@ -28,35 +28,34 @@ module.exports = {
 				result.data.push(this.data);
 			}*/
 			this.process();
-			result = this.data;
 		}
 		else{
 			this.init();
 			this.initialProcess();
-			result = this.data;
 			//result.data.push(this.data);
 			//result.light_map = this.light.map;
 		}
 		
-		return result;// data is a buffer
+		return Buffer.from(this.buffer);
 	},
 	
 	init: function(){
 		var params = __server.POST;
 		
-		this.size = vget(params.width >> 0, params.height >> 0);
-		this.size2 = vget(this.size.x >> 1, this.size.y >> 1);
-		this.radius = this.radius || Math.min(this.size2.x >> 1, this.size2.y >> 1);
+		this.size = vget(params.width >> 0, params.height >> 0);// round
+		this.size2 = vget(this.size.x >> 1, this.size.y >> 1);// / 2
+		if (!this.radius) this.radius = Math.min(this.size2.x >> 1, this.size2.y >> 1);// / 2
 		
-		this.light = new Light(this.size);
+		//this.light = new Light(this.size);
 		image.size = this.size;
 	},
 	initialProcess: function(){
 		this.points = [];
-		this.data = {};
+		this.buffer = new ArrayBuffer((this.size.x * this.size.y) << 2);// * 4
+		this.data = new Uint32Array(this.buffer);
 		
-		this.light.setCoo(vuno(0));
-		this.outer_grav = this.light.getCoo();
+		//this.light.setCoo(vuno(0));
+		//this.outer_grav = this.light.getCoo();
 		
 		var p;
 		
@@ -83,7 +82,7 @@ module.exports = {
 		
 		vmult(d, this.outer_mult/l);
 		vadd(p.speed, d);
-		vsub(this.light.speed, this.mass/l);
+		//vsub(this.light.speed, this.mass/l);
 	},
 	
 	process: function(){
@@ -124,7 +123,6 @@ module.exports = {
 			if (this.outer_mult && p.y > this.height)
 				p.y = 2*this.height - p.y;
 			
-			//__server.e('!');
 			this.setFramePoint(p);
 		}
 		
@@ -133,18 +131,19 @@ module.exports = {
 	
 	// with color of temperature
 	setFramePoint: function(p){
-		p = image.roundCoo(p, true);
-		
 		if (!image.inScr(p)) return;
 		
-		if (image.isPoint(this.data, p))
-		{
-			this.data[p.y][p.x].r = image.clampColor(this.data[p.y][p.x].r + this.temp_color_inc);
-		}
-		else{
-			image.setColor(this.data, p);
+		var index = (p.y * this.size.x + p.x) >> 0;// round
+		var c = this.data[index];
+		
+		if (c > 0) c += this.temp_color_inc << 24;// 3 bytes
+		
+		//else{
+			//image.setColor(this.data, p, c);
 			//this.light.apply(this.data, p);
-		}
+		//}
+		
+		this.data[index] = c || 0xFF000000;// 4 bytes
 		
 		//this.setTail(this.calc_index, result);
 	},

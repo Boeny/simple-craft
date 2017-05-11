@@ -12,6 +12,12 @@ module.exports = function(path){
 			return '';
 		
 		default:
-			return main_process.step();
+			var data = main_process.step();
+			__server.response.writeHead(200, {
+				'Content-Type': 'application/octet-stream',
+				'Content-Length' : data.length
+			});
+			__server.response.write(data);
+			return null;
 	}
 };

@@ -9,4 +9,4 @@ var content =	h.canvas({id: 'canvas', 'class': 'pointer'})+
 					{'class': 'abs top bk_fff'}
 				);
 
-module.exports.content = h.div(content, {id: 'app', 'class': 'app rel bk_000'});
+module.exports.content = h.div(content, {id: 'app', 'class': 'app rel'});// bk_000
