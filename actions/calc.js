@@ -21,7 +21,6 @@ module.exports = {
 	
 	// main process
 	step: function(){
-		__server.msg(__server.POST);
 		this.initialized = !__server.POST || !obj_length(__server.POST);
 		
 		var result = {data: []};
@@ -129,7 +128,7 @@ module.exports = {
 			//__server.e('!');
 			this.setFramePoint(p);
 		}
-
+		
 		//this.light.move();
 	},
 	
@@ -145,7 +144,43 @@ module.exports = {
 		}
 		else{
 			image.setColor(this.data, p);
-			this.light.apply(this.data, p);
+			//this.light.apply(this.data, p);
 		}
-	}
+		
+		//this.setTail(this.calc_index, result);
+	},
+	
+	tail: 0,// px
+	setTail: function(index, data){
+ 		if (!this.tail || !+index) return;
+ 		
+		var old, opacity;
+		var step = Math.round(255/this.tail);
+		var t = index - this.tail;
+		if (t < 0) t = 0;
+		var i = 0;
+		var c;
+		
+		do {
+			old = this.history[t];
+			opacity = i*step;
+			
+			for (var y in old)
+			for (var x in old[+y]){
+				x = +x;
+				y = +y;
+				
+				if (!data[y] || !data[y][x])
+				{
+					check_obj(data, y, {});
+					c = this.c.getColorAt(this.img, x, y);
+					data[y][x] = {r: c.r, g: c.g, b: c.b, a: opacity};
+				}
+			}
+			
+			i++;
+			t++;
+		}
+		while(t < index);
+ 	}
 };

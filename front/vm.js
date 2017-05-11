@@ -19,12 +19,9 @@ var App = function(elem){
 };
 
 App.prototype = {
-	calc_index: 0,
 	frames_count: 1000,
 	history: [],
 	play_index: 0,
-	tail: 0,// px
-	calculating: true,
 	
 	//------------------------
 	stop: function(){
@@ -43,7 +40,9 @@ App.prototype = {
 		this.resume();
 	},
 	
-	//-----------------------------------------------
+	//----------------------------------------------- calculating process
+	calc_index: 0,
+	
 	calc: function(data){
 		var xhr = new XMLHttpRequest();
 		xhr.open('POST','/calc');
@@ -52,11 +51,11 @@ App.prototype = {
 		xhr.onload = () => {
 			this.calc_index++;
 				
-			if (this.calculating && this.calc_index < this.frames_count)
+			if (this.calc_index < this.frames_count)
 			{
 				xhr.send();
+				
 				// save the package of the frames to the history
-				//this.setTail(this.calc_index, result);
 				var result = new Uint8ClampedArray(xhr.response);
 				this.history.push(result);
 				this.render(result);
@@ -66,44 +65,10 @@ App.prototype = {
 			else this.stopCalc();
 		};
 		
-		xhr.send(data);
+		xhr.send(JSON.stringify(data));
 	},
 	
-	setTail: function(index, data){
- 		if (!this.tail || !+index) return;
- 		
-		var old, opacity;
-		var step = Math.round(255/this.tail);
-		var t = index - this.tail;
-		if (t < 0) t = 0;
-		var i = 0;
-		var c;
-		
-		do {
-			old = this.history[t];
-			opacity = i*step;
-			
-			for (var y in old)
-			for (var x in old[+y]){
-				x = +x;
-				y = +y;
-				
-				if (!data[y] || !data[y][x])
-				{
-					check_obj(data, y, {});
-					c = this.c.getColorAt(this.img, x, y);
-					data[y][x] = {r: c.r, g: c.g, b: c.b, a: opacity};
-				}
-			}
-			
-			i++;
-			t++;
-		}
-		while(t < index);
- 	},
-	
 	stopCalc: function(){
-		this.calculating = false;
 		this.play_index = 1;
 		this.clear();
 		this.restart_btn.show();
@@ -136,7 +101,6 @@ App.prototype = {
 };
 
 $(function(){
-	alert('!');
 	var app = new App('#canvas');
 	
 	$(document).on('mousedown', '#canvas', function(){
