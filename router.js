@@ -12,6 +12,6 @@ module.exports = function(path){
 			return '';
 		
 		default:
-			return JSON.stringify(main_process.step());
+			return main_process.step();
 	}
 };
