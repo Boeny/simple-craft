@@ -24,6 +24,6 @@ module.exports = {
 		return data[(p.y * this.size.x + p.x) >> 0];
 	},
 	setColor: function(data, p, c){
-		data[(p.y * this.size.x + p.x) >> 0] = c || 0x000000FF;// 0,0,0,255 (r,g,b,a)
+		data[(p.y * this.size.x + p.x) >> 0] = c || 0xFF000000;// 255,0,0,0 (a,b,g,r)
 	}
 };

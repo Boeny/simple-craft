@@ -3,7 +3,7 @@ var layout = require(ROOT+'/views/layout');
 var view = require(ROOT+'/views/index');
 var content = layout(view.content);
 
-module.exports = function(path){
+module.exports = function(path, response){
 	switch (path){
 		case '/':
 			return content;
@@ -13,11 +13,10 @@ module.exports = function(path){
 		
 		default:
 			var data = main_process.step();
-			__server.response.writeHead(200, {
+			response.writeHead(200, {
 				'Content-Type': 'application/octet-stream',
 				'Content-Length' : data.length
 			});
-			__server.response.write(data);
-			return null;
+			response.write(data);
 	}
 };
