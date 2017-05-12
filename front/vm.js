@@ -71,9 +71,9 @@ App.prototype = {
 				var result = xhr.response;
 				
 				// save the frame to the history
-				result = new ImageData(new Uint8ClampedArray(result), this.width, this.height);
+				result = new Uint8ClampedArray(result);
 				
-				//this.history.push(result);
+				this.history.push(result);
 				requestAnimationFrame(() => {this.render(result)});
 				
 				this.bar.width(this.bar_koef * this.calc_index);
@@ -117,7 +117,8 @@ App.prototype = {
 	},
 	
 	render: function(data){
-		this.c.putData(data);
+		this.img.data.set(data);
+		this.c.putData(this.img);
 	},
 	
 	clear: function(){
