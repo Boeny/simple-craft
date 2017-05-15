@@ -13,10 +13,10 @@ module.exports = {
 	points_count: 1000,
 	radius: 100,
 	
-	mass: 0.001,
+	mass: 0,
 	collision_distance: 2,
 	temp_color_inc: 30,
-	outer_mult: 0,// 0.0001,
+	outer_mult: 0.05,
 	
 	// main process
 	step: function(){
@@ -56,7 +56,7 @@ module.exports = {
 		this.data = new Uint32Array(this.buffer);
 		
 		//this.light.setCoo(vuno(0));
-		//this.outer_grav = this.light.getCoo();
+		this.outer_grav = vget(0,10);
 		
 		var p;
 		
@@ -76,6 +76,11 @@ module.exports = {
 	
 	addOuterGrav: function(p){
 		if (!this.outer_mult) return;
+		
+		vadd(p.speed, vmult(this.outer_grav, this.outer_mult, true));
+		
+		if (p.y > this.height) p.y = this.height - p.speed;
+		return;
 		
 		var d = vsub(this.outer_grav, p, true);
 		var l = vlen(d);
@@ -124,9 +129,6 @@ module.exports = {
 			this.addOuterGrav(p);
 			
 			vadd(p, p.speed);
-			
-			if (this.outer_mult && p.y > this.height)
-				p.y = 2*this.height - p.y;
 			
 			this.setFramePoint(p, old_index);
 		}
