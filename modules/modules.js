@@ -1,4 +1,8 @@
-var files = ['modules/base','h=modules/html','Canvas=front/canvas','front/vm'];
+var files = [
+	'modules/base',
+	'Canvas=front/canvas',
+	'front/vm'
+];
 
 if (__server.is_mobile) files.unshift('front/mobile_error');
 

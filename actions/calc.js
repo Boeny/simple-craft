@@ -14,8 +14,8 @@ module.exports = {
 	radius: 100,
 	
 	mass: 0.00005,
-	collision_distance: 0.5,
-	temp_color_inc: 50,
+	collision_distance: 1,
+	temp_color_inc: 30,
 	outer_mult: 0,// 0.0001,
 	
 	// main process
@@ -62,6 +62,7 @@ module.exports = {
 		
 		for (var i=0; i<this.points_count; i++){
 			p = randomInCircle(this.size2.x, this.size2.y, this.radius, true);// as float
+			//p = vget(this.size2.x, this.size2.y);
 			
 			this.points.push({
 				x: p.x,
@@ -87,11 +88,12 @@ module.exports = {
 	},
 	
 	process: function(){
-		var p, p2, l, d;
+		var old_index, p, p2, l, d;
 		
 		for (var i=0; i<this.points.length; i++){
 			p = this.points[i];
-			this.clearFramePoint(p);
+			old_index = image.roundCoo(p, true);
+			old_index = old_index.y * this.size.x + old_index.x;
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
@@ -107,11 +109,13 @@ module.exports = {
 					}
 				}
 				else{// collision
-					vmult(d, (l-this.collision_distance)/l);// normalize and set the backward direction
+					d = vadd(p.speed, p2.speed, true);
+					vmult(d, 0.4);
+					
+					vset(d, l-this.collision_distance);// normalize and set the backward direction
 					vadd(p, d);
 					vsub(p2, d);
 					
-					d = vmult(vadd(p.speed, p2.speed, true), 0.4, true);
 					p.speed = vcopy(d);
 					p2.speed = vcopy(d);
 				}
@@ -124,20 +128,24 @@ module.exports = {
 			if (this.outer_mult && p.y > this.height)
 				p.y = 2*this.height - p.y;
 			
-			this.setFramePoint(p);
+			this.setFramePoint(p, old_index);
 		}
 		
 		//this.light.move();
 	},
 	
 	// with color of temperature
-	setFramePoint: function(p){
+	setFramePoint: function(p, old_index){
+		p = image.roundCoo(p, true);
 		if (!image.inScr(p)) return;
 		
-		var index = (p.y * this.size.x + p.x) >> 0;// round
+		var index = p.y * this.size.x + p.x;
 		var c = this.data[index];
 		
-		if (c > 0) c += this.temp_color_inc;// red
+		if (c > 0){
+			c += this.temp_color_inc;// red
+			if (c > 0xFF0000FF) c = 0xFF0000FF;
+		}
 		
 		//else{
 			//image.setColor(this.data, p, c);
@@ -145,9 +153,7 @@ module.exports = {
 		//}
 		
 		this.data[index] = c || 0xFF000000;// 4 bytes (a,b,g,r)
-	},
-	clearFramePoint: function(p){
-		this.data[(p.y * this.size.x + p.x) >> 0] = 0;
+		if (old_index != index) this.data[old_index] = 0;
 	},
 	
 	tail: 1,// px

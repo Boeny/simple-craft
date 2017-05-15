@@ -7,29 +7,29 @@ module.exports.prototype = {
 	createData: function(w,h){
 		return this.canvas.createImageData(w,h);
 	},
-	putData: function(data, x,y){
-		this.canvas.putImageData(data, x || 0, y || 0);
+	putData: function(img, x,y){
+		this.canvas.putImageData(img, x || 0, y || 0);
 	},
 	
-	getColorAtIndex: function(p,i){
+	getColorAtIndex: function(img,i){
 		return {
-			r: p.data[i] || 0,
-			g: p.data[i+1] || 0,
-			b: p.data[i+2] || 0,
-			a: p.data[i+3] || 0
+			r: img.data[i] || 0,
+			g: img.data[i+1] || 0,
+			b: img.data[i+2] || 0,
+			a: img.data[i+3] || 0
 		};
 	},
-	setColorAtIndex: function(p,i,c){
+	setColorAtIndex: function(img,i,c){
 		c = c || {};
 		
-		p.data[i] = c.r === undefined ? 0 : c.r;
-		p.data[i+1] = c.g === undefined ? 0 : c.g;
-		p.data[i+2] = c.b === undefined ? 0 : c.b;
-		p.data[i+3] = c.a === undefined ? 255 : c.a;
+		img.data[i] = c.r === undefined ? 0 : c.r;
+		img.data[i+1] = c.g === undefined ? 0 : c.g;
+		img.data[i+2] = c.b === undefined ? 0 : c.b;
+		img.data[i+3] = c.a === undefined ? 255 : c.a;
 	},
 	
-	getColorAt: function(p, x,y){
-		return this.getColorAtIndex(p, 4*(x + y * this.DOM.width));
+	getColorAt: function(img, x,y){
+		return this.getColorAtIndex(img, 4*(x + y * this.DOM.width));
 	},
 	setColorAt: function(p, x,y, c){
 		var i = 4*(x + y * this.DOM.width);

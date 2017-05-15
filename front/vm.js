@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', function(){
 var App = function(elem){
 	this.c = new Canvas(elem);
 	
-	this.c.DOM.width = this.width = $(window).width();
-	this.c.DOM.height = this.height = $(window).height();
+	this.c.DOM.width = this.width = $(window).width()/2 >> 0;
+	this.c.DOM.height = this.height = $(window).height()/2 >> 0;
 	
 	this.bar = $('#bar');
 	this.bar_koef = this.bar.parent().width()/this.frames_count;
@@ -70,10 +70,11 @@ App.prototype = {
 			{
 				var result = xhr.response;
 				
-				// save the frame to the history
+				
 				result = new Uint8ClampedArray(result);
 				
-				this.history.push(result);
+				this.history.push(result);// save the frame
+				
 				requestAnimationFrame(() => {this.render(result)});
 				
 				this.bar.width(this.bar_koef * this.calc_index);
@@ -101,7 +102,6 @@ App.prototype = {
 	
 	update: function(){
 		if (!this.timer || this.play_index >= this.history.length) return;
-		console.log(this.play_index);
 		requestAnimationFrame(() => {this.update()});
 		
 		this.play_index_offset_initial++;

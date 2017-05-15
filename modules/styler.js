@@ -1,7 +1,8 @@
 module.exports = {
 	result_styles: {},
 	styles: {
-		'^app':'width:100%;height:100%',
+		'^full$':'width:100%',
+		'^full-height$':'height:100%',
 		'^abs':'position:absolute',
 		'^fix':'position:fixed',
 		'^rel':'position:relative',
@@ -41,6 +42,9 @@ module.exports = {
 		'pull-(.*)':'float:$1'
 	},
 	combined: {
+		'app':'full full-height rel',// bk_000
+		'canvas':'pointer full full-height',
+		
 		'bar':'w_0 h_16 bk_00f',
 		'btn':'center pointer b_1_ccc br_3 p_3_9 shadow_1_1_1_777 bk_fff',
 		'btn:active':'bk_eee shadow_inset_2_2_3_0_777',
