@@ -65,11 +65,10 @@ App.prototype = {
 		xhr.responseType = 'arraybuffer';
 		xhr.onload = () => {
 			this.calc_index++;
-				
+			
 			if (!this.play_index && this.calc_index < this.frames_count)
 			{
 				var result = xhr.response;
-				
 				
 				result = new Uint8ClampedArray(result);
 				

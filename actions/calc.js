@@ -13,8 +13,8 @@ module.exports = {
 	points_count: 1000,
 	radius: 100,
 	
-	mass: 0.00005,
-	collision_distance: 1,
+	mass: 0.001,
+	collision_distance: 2,
 	temp_color_inc: 30,
 	outer_mult: 0,// 0.0001,
 	
@@ -88,7 +88,7 @@ module.exports = {
 	},
 	
 	process: function(){
-		var old_index, p, p2, l, d;
+		var old_index, p, p2, l, d, tmp;
 		
 		for (var i=0; i<this.points.length; i++){
 			p = this.points[i];
@@ -109,12 +109,12 @@ module.exports = {
 					}
 				}
 				else{// collision
-					d = vadd(p.speed, p2.speed, true);
-					vmult(d, 0.4);
-					
-					vset(d, l-this.collision_distance);// normalize and set the backward direction
+					d = vset(d, l-this.collision_distance, true);// normalize and set the backward direction
 					vadd(p, d);
 					vsub(p2, d);
+					
+					d = vadd(p.speed, p2.speed, true);
+					vmult(d, 0.5);
 					
 					p.speed = vcopy(d);
 					p2.speed = vcopy(d);
