@@ -40,8 +40,7 @@ App.prototype = {
 	
 	//------------------------
 	stop: function(){
-		if (!this.timer) return;
-		this.timer = null;
+		this.timer = false;
 	},
 	resume: function(){
 		if (!this.play_index) this.stopCalc();
@@ -96,7 +95,7 @@ App.prototype = {
 	
 	//-----------------------------------------------------
 	play_index_offset_initial: -1,
-	play_index_offset: 2,
+	play_index_offset: 5,
 	show_play_time: false,
 	
 	update: function(){

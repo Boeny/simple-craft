@@ -9,6 +9,11 @@ module.exports = {
 	isPoint: function(data, p){
 		return this.getColor(data, p) > 0;// 0x...XY
 	},
+	getIndex: function(p){
+		if (!this.inScr(p)) return -1;
+		p = this.roundCoo(p, true);
+		return p.y * this.size.x + p.x;
+	},
 	
 	inScrAll: function(arr){
 		for (var i=0; i<arr.length; i++){
@@ -21,10 +26,9 @@ module.exports = {
 	},
 	
 	getColor: function(data, p){
-		return data[(p.y * this.size.x + p.x) >> 0];
+		return data[this.getIndex(p)];
 	},
 	setColor: function(data, p, c){
-		p = this.roundCoo(p, true);
-		data[p.y * this.size.x + p.x] = c || 0xFF000000;// 255,0,0,0 (a,b,g,r)
+		data[this.getIndex(p)] = c || 0xFF000000;// 255,0,0,0 (a,b,g,r)
 	}
 };
