@@ -95,7 +95,7 @@ App.prototype = {
 	
 	//-----------------------------------------------------
 	play_index_offset_initial: -1,
-	play_index_offset: 5,
+	play_index_offset: 2,
 	show_play_time: false,
 	
 	update: function(){
