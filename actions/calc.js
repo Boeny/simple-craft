@@ -109,25 +109,31 @@ module.exports = {
 	
 	process: function(bOld, old, bRender){
 		var p, p2, l, d, tmp;
-		var repulse = this.collision_distance * 0.1;
+		var repulse = this.collision_distance * 0.3;
+		var em = 0.1;
 		var speed;
 		
 		for (var i=0; i<this.points_count; i++){
 			p = this.points[i];
 			this.addOuterGrav(p);
+			
 			if (p.fixed || !image.inScr(p)) continue;
 			if (bOld) old[i] = image.getIndex(p);
+			
 			speed = vlen(p.speed);
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
 				
-				d = vsub(p, p2, true);
+				d = vsub(p, p2, true);// repulse direction
 				l = vlen(d);
 				
+				/*if (l > this.collision_distance && l < 10){
+					vsub(p.speed, vmult(d, em/l, true));// attraction direction
+				}*/
+				
 				if (l < this.collision_distance || l < speed){
-					vmult(d, repulse/l);// normalize and set the backward direction
-					vadd(p.speed, d);
+					vadd(p.speed, vmult(d, repulse/(l*l), true));
 				}
 			}
 			
@@ -142,6 +148,9 @@ module.exports = {
 	// with color of temperature
 	setFramePoint: function(p, old_index){
 		p = image.roundCoo(p, true);
+		
+		if (old_index > -1 && old_index != index) this.data[old_index] = 0;
+		
 		if (!image.inScr(p)) return;
 		
 		var index = p.y * this.size.x + p.x;
@@ -157,7 +166,6 @@ module.exports = {
 			this.light.apply(this.data, p);
 		}*/
 		
-		if (old_index > -1 && old_index != index) this.data[old_index] = 0;
 		this.data[index] = c || 0xFF000000;// 4 bytes (a,b,g,r)
 	},
 	clearFramePoint: function(p){
