@@ -109,44 +109,25 @@ module.exports = {
 	
 	process: function(bOld, old, bRender){
 		var p, p2, l, d, tmp;
+		var repulse = this.collision_distance * 0.1;
+		var speed;
 		
 		for (var i=0; i<this.points_count; i++){
 			p = this.points[i];
 			this.addOuterGrav(p);
 			if (p.fixed || !image.inScr(p)) continue;
 			if (bOld) old[i] = image.getIndex(p);
+			speed = vlen(p.speed);
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
 				
-				d = vsub(p2, p, true);
+				d = vsub(p, p2, true);
 				l = vlen(d);
 				
-				if (l > this.collision_distance){
-					//if (l < vlen(p.speed)){
-						
-					//}
-					/*if (this.mass){
-						vmult(d, this.mass/l);
-						vadd(p.speed, d);
-						vsub(p2.speed, d);
-					}*/
-				}
-				else{// collision
-					d = vset(d, l-this.collision_distance, true);// normalize and set the backward direction
-					vadd(p, d);
-					if (!p2.fixed) vsub(p2, d);
-					
-					d = vadd(p.speed, p2.speed, true);
-					vmult(d, 0.5);
-					p.speed = d;
-					
-					if (p2.fixed){
-						p.speed = vuno(0);
-						p.fixed = true;
-					}
-					else
-						p2.speed = vcopy(d);
+				if (l < this.collision_distance || l < speed){
+					vmult(d, repulse/l);// normalize and set the backward direction
+					vadd(p.speed, d);
 				}
 			}
 			
