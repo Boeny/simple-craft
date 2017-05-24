@@ -1,7 +1,7 @@
 var files = [
 	'modules/base',
-	'Canvas=front/canvas',
-	'front/vm'
+	'App=front/vm',
+	'front/canvas'
 ];
 
 if (__server.is_mobile) files.unshift('front/mobile_error');
@@ -27,4 +27,4 @@ for (var i=0; i<files.length; i++){
 	modules += v + createModule(f);
 }
 
-module.exports = h.script(modules);
+module.exports = h.script("'use strict';"+modules);
