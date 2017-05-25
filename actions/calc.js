@@ -80,7 +80,7 @@ module.exports = {
 		}
 		
 		this.plains = [
-			{x:0, y:-1, l:this.collision_distance}
+			{x:0, y:-1, l:this.size.y}
 		];
 	},
 	
@@ -111,10 +111,9 @@ module.exports = {
 			p = this.points[i];
 			this.addOuterGrav(p);
 			
-			if (p.fixed || !image.inScr(p)) continue;
 			if (bOld) old[i] = image.getIndex(p);
 			
-			speed = vlen(p.speed);
+			/*speed = vlen(p.speed);
 			
 			for (var j=i+1; j<this.points.length; j++){
 				p2 = this.points[j];
@@ -128,14 +127,14 @@ module.exports = {
 				
 				/*if (l < this.collision_distance || l < speed){
 					vadd(p.speed, vmult(d, repulse/(l*l), true));
-				}*/
-			}
+				}
+			}*/
 			
 			for (var k=0; k<this.plains.length; k++){
 				p2 = this.plains[k];
 				d = p.speed.x*p2.x + p.speed.y*p2.y;
 				if (p.x*p2.x + p.y*p2.y + p2.l < 0 && d < 0){
-					vsub(p.speed, vmult(p2, d << 1, true));
+					vsub(p.speed, vmult(p2, d * 2, true));
 				}
 			}
 		}
