@@ -79,15 +79,9 @@ module.exports = {
 			this.setFramePoint(p);
 		}
 		
-		for (i=0; i<this.size.x; i++){
-			this.points.push({
-				x: i,
-				y: this.size.y - 1,
-				speed: vuno(0),
-				fixed: true
-			});
-			this.setFramePoint(p);
-		}
+		this.plains = [
+			{x:0, y:-this.size.y, l:this.size.y}
+		];
 	},
 	
 	addOuterGrav: function(p){
@@ -132,16 +126,25 @@ module.exports = {
 					vsub(p.speed, vmult(d, em/l, true));// attraction direction
 				}*/
 				
-				if (l < this.collision_distance || l < speed){
+				/*if (l < this.collision_distance || l < speed){
 					vadd(p.speed, vmult(d, repulse/(l*l), true));
-				}
+				}*/
 			}
 			
-			vadd(p, p.speed);
-			
-			if (bRender) this.setFramePoint(p, old[i]);
+			for (var k=0; k<this.plains.length; k++){
+				p2 = this.plains[k];
+				d = p.speed.x*p2.x + p.speed.y*p2.y;
+				if (p.x*p2.x + p.y*p2.y + p2.l < 0 && d < 0){
+					vsub(p.speed, vmult(p2, d << 1, true));
+				}
+			}
 		}
 		
+		for (var i=0; i<this.points.length; i++){
+			p = this.points[i];
+			vadd(p, p.speed);
+			if (bRender) this.setFramePoint(p, old[i]);
+		}
 		//this.light.move();
 	},
 	
@@ -150,7 +153,7 @@ module.exports = {
 		p = image.roundCoo(p, true);
 		
 		var index = p.y * this.size.x + p.x;
-		//if (old_index > -1 && old_index != index) this.data[old_index] = 0;
+		if (old_index > -1 && old_index != index) this.data[old_index] = 0;
 		
 		if (!image.inScr(p)) return;
 		
