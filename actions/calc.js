@@ -80,7 +80,7 @@ module.exports = {
 		}
 		
 		this.plains = [
-			{x:0, y:-this.size.y, l:this.size.y}
+			{x:0, y:-1, l:this.collision_distance}
 		];
 	},
 	
