@@ -84,6 +84,9 @@ global.vset = function(v, num, ret){
 global.vnorm = function(v, ret){
 	return vset(v, 1, ret);
 };
+global.vdot = function(v1, v2){
+	return v1.x*v2.x + v1.y*v2.y;
+};
 global.tov = function(v){
 	return is_object(v) ? v : vuno(v);
 };
