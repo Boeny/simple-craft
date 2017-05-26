@@ -84,6 +84,19 @@ global.vset = function(v, num, ret){
 global.vnorm = function(v, ret){
 	return vset(v, 1, ret);
 };
+/**
+ * rotates vector by 90 deg to clockwise or counterclockwise direction
+ * @param {object} v vector {x,y}
+ * @param {int(1)} direction clockwise (1) or counterclockwise (-1)
+ * @param {bool(false)} ret return vector or modify the incoming vector
+ */
+global.vort = function(v, direction, ret){
+	if (ret) return vget(direction*v.y, -direction*v.x);
+	
+	var tmp = v.x;
+	v.x = direction*v.y;
+	v.y = -direction*tmp;
+};
 global.tov = function(v){
 	return is_object(v) ? v : vuno(v);
 };
