@@ -14,7 +14,7 @@ module.exports = {
 	radius: 50,
 	
 	mass: 0,
-	collision_distance: 1.2,
+	collision_distance: 3,
 	temp_color_inc: 30,
 	outer_mult: 0.005,
 	
