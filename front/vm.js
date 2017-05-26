@@ -1,39 +1,9 @@
-'use strict';
-
-document.addEventListener('DOMContentLoaded', function(){
-	var app = new App('#canvas');
-	
-	$(document).on('mousedown', '#canvas', function(){
-		if (app.timer)
-			app.stop();
-		else
-			app.resume();
-	});
-	
-	$('#restart').on('click', function(){
-		app.restart();
-	});
-});
-
-var App = function(elem){
-	this.c = new Canvas(elem);
-	
-	this.c.DOM.width = this.width = $(window).width()/2 >> 0;
-	this.c.DOM.height = this.height = $(window).height()/2 >> 0;
-	
-	this.bar = $('#bar');
-	this.bar_koef = this.bar.parent().width()/this.frames_count;
-	this.counter = $('#counter');
-	this.restart_btn = $('#restart');
-	
+module.exports = function(params){
+	this.renderer = params.renderer;
 	this.clear();
-	this.calc({
-		width: this.width,
-		height: this.height
-	});
 };
 
-App.prototype = {
+module.exports.prototype = {
 	frames_count: 1000,
 	history: [],
 	play_index: 0,
@@ -58,39 +28,30 @@ App.prototype = {
 	calc_index: 0,
 	
 	calc: function(data){
-		var xhr = new XMLHttpRequest();
-		xhr.open('POST','/calc',true);
-		xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-		xhr.responseType = 'arraybuffer';
-		xhr.onload = () => {
+		this.renderer.createSender(data, () => {
 			this.calc_index++;
 			
 			if (!this.play_index && this.calc_index < this.frames_count)
 			{
-				var result = xhr.response;
-				
+				var result = this.renderer.sender.response;
 				result = new Uint8ClampedArray(result);
 				
 				this.history.push(result);// save the frame
 				
-				requestAnimationFrame(() => {this.render(result)});
-				
-				this.bar.width(this.bar_koef * this.calc_index);
-				this.counter.html(this.calc_index+'/'+this.frames_count);
-				
-				xhr.open('POST','/calc',true);
-				xhr.send();
+				this.renderer.nextFrame(() => {this.render(result)});
+				this.renderer.updateProgress(this.calc_index, this.frames_count);
+				this.renderer.send();
 			}
-			else this.stopCalc();
-		};
-		
-		xhr.send(JSON.stringify(data));
+			else{
+				this.stopCalc();
+			}
+		});
 	},
 	
 	stopCalc: function(){
 		this.play_index = 1;
 		this.clear();
-		this.restart_btn.show();
+		this.renderer.readyForPlaying();
 	},
 	
 	//-----------------------------------------------------
@@ -100,7 +61,7 @@ App.prototype = {
 	
 	update: function(){
 		if (!this.timer || this.play_index >= this.history.length) return;
-		requestAnimationFrame(() => {this.update()});
+		this.renderer.nextFrame(() => {this.update()});
 		
 		this.play_index_offset_initial++;
 		if (this.play_index_offset_initial < this.play_index_offset) return;
@@ -108,7 +69,7 @@ App.prototype = {
 		var data = this.history[this.play_index];
 		
 		this.render(data);
-		if (this.show_play_time) this.counter.html(this.play_index);
+		if (this.show_play_time) this.renderer.updateCounter(this.play_index);
 		
 		this.play_index++;
 		this.play_index_offset_initial = -1;
@@ -116,10 +77,10 @@ App.prototype = {
 	
 	render: function(data){
 		this.img.data.set(data);
-		this.c.putData(this.img);
+		this.renderer.render(this.img);
 	},
 	
 	clear: function(){
-		this.img = this.c.createData(this.width, this.height);
+		this.img = this.renderer.createData();
 	}
 };

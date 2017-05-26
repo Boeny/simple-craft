@@ -74,7 +74,8 @@ module.exports = {
 			this.points.push({
 				x: p.x,
 				y: p.y,
-				speed: vset(vort(vsub(p, this.size2, true), 1, true), random(-1,3), true)
+				speed: vset(vort(vsub(p, this.size2, true), 1, true), random(-1,3), true),//vuno(0),
+				restore: 0.8
 			});
 			
 			this.setFramePoint(p);
@@ -89,6 +90,12 @@ module.exports = {
 			});
 			this.setFramePoint(p);
 		}*/
+		
+		this.plains = [
+			{x:0, y:-1, l:this.size.y, restore: 0.8},
+			{x:1, y:0, l:0, restore: 1},
+			{x:-1, y:0, l:this.size.x, restore: 1}
+		];
 	},
 	
 	addOuterGrav: function(p){
@@ -116,41 +123,76 @@ module.exports = {
 		}
 	},
 	
-	process: function(bOld, old, bRender){
-		var p, p2, l, d, tmp;
-		var repulse = this.collision_distance * 0.1;
-		var em = 0.1;
-		var speed;
+	pointsCollision: function(i, p){
+		//var repulse = this.collision_distance * 0.1;
+		//var em = 0.1;
+		//var speed = vlen(p.speed);
+		var n, l, d;
 		
-		for (var i=0; i<this.points_count; i++){
-			p = this.points[i];
-			this.addOuterGrav(p);
+		for (var j=i+1; j<this.points.length; j++){
+			p2 = this.points[j];
 			
-			//if (p.fixed || !image.inScr(p)) continue;
-			if (bOld) old[i] = image.getIndex(p);
+			n = vsub(p, p2, true);// repulse direction
+			l = vlen(n);
 			
-			speed = vlen(p.speed);
+			//if (l > this.collision_distance && l < 10){
+			//	vsub(p.speed, vmult(n, em/l, true));// attraction direction
+			//}
 			
-			for (var j=i+1; j<this.points.length; j++){
-				p2 = this.points[j];
+			if (l < this.collision_distance)
+			{
+				d = vdot(p.speed, n);
 				
-				d = vsub(p, p2, true);// repulse direction
-				l = vlen(d);
-				
-				//if (l > this.collision_distance && l < 10){
-				//	vsub(p.speed, vmult(d, em/l, true));// attraction direction
-				//}
-				
-				if (l < this.collision_distance || l < speed){
-					vadd(p.speed, vmult(d, repulse/l, true));
+				if (d < 0){
+					l = (p2.restore + p.restore)/2;
+					
+					vadd(p, vset(n, this.collision_distance-l, true));
+					vsub(p.speed, vmult(n, d * l, true));
+					
+					vmult(n, -1);
+					vsub(p2.speed, vmult(n, vdot(p2.speed, n) * l, true));
 				}
 			}
 		}
+	},
+	
+	plainsCollision: function(p){
+		var d, l, n;
 		
-		for (var i=0; i<this.points_count; i++){
+		for (var i=0; i<this.plains.length; i++){
+			n = this.plains[i];
+			d = vdot(p.speed, n);
+			l = vdot(p, n) + n.l;
+			
+			if (l < this.collision_distance && d < 0){
+				vadd(p, vset(n, this.collision_distance-l, true));
+				vsub(p.speed, vmult(n, d * (n.restore + p.restore), true));
+			}
+		}
+	},
+	
+	process: function(bOld, old, bRender){
+		var p;
+		
+		for (var i=0; i<this.points.length; i++){
 			p = this.points[i];
+			this.addOuterGrav(p);
+			
+			if (bOld) old[i] = image.getIndex(p);
+			
 			vadd(p, p.speed);
-			if (bRender) this.setFramePoint(p, old[i]);
+		}
+		
+		for (var i=0; i<this.points.length; i++){
+			p = this.points[i];
+			this.pointsCollision(i, p);
+			this.plainsCollision(p);
+		}
+		
+		if (!bRender) return;
+		
+		for (var i=0; i<this.points.length; i++){
+			this.setFramePoint(this.points[i], old[i]);
 		}
 		
 		//this.light.move();

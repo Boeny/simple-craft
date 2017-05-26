@@ -1,14 +1,85 @@
-module.exports = function(elem){
-	this.DOM = $(elem)[0];
+function getElement(id){
+	return document.getElementById(id);
+};
+function addEvent(elem, event, handler){
+	elem.addEventListener(event, handler);
+}
+
+var components = {
+	Element: function(id){
+		this.DOM = getElement(id);
+		this.update = (text) => {this.DOM.innerHTML = text};
+	},
+	
+	Bar: function(id, count){
+		this.DOM = getElement(id);
+		this.koef = this.DOM.parentNode.clientWidth / count;
+		this.update = (index) => {this.DOM.style.width = this.koef * index + 'px'};
+	},
+	
+	Button: function(id, onClick){
+		this.DOM = getElement(id);
+		addEvent(this.DOM, 'click', onClick);
+		this.show = () => {this.DOM.style.display = 'block'};
+	}
+};
+
+function Canvas(id, width, height){
+	this.DOM = getElement(id);
+	this.DOM.width = width;
+	this.DOM.height = height;
+	
 	this.canvas = this.DOM.getContext('2d');
 };
 
-module.exports.prototype = {
-	createData: function(w,h){
-		return this.canvas.createImageData(w,h);
+Canvas.prototype = {
+	getWidth: function(){
+		return this.DOM.width;
 	},
-	putData: function(img, x,y){
+	getHeight: function(){
+		return this.DOM.height;
+	},
+	
+	addEvent: function(event, handler){
+		addEvent(this.DOM, event, handler);
+	},
+	createComponent: function(type, args){
+		var comp = {};
+		components[type].apply(comp, args);
+		return comp;
+	},
+	initComponents: function(components){
+		for (var prop in components){
+			this[prop] = components[prop];
+		}
+	},
+	
+	createSender: function(data, onLoad){
+		this.sender = new XMLHttpRequest();
+		this.openSender();
+		
+		this.sender.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		this.sender.responseType = 'arraybuffer';
+		this.sender.onload = onLoad;
+		
+		this.sender.send(JSON.stringify(data));
+	},
+	openSender: function(){
+		this.sender.open('POST','/calc',true);
+	},
+	send: function(data){
+		this.openSender();
+		this.sender.send(data);
+	},
+	
+	createData: function(w,h){
+		return this.canvas.createImageData(w || this.getWidth(), h || this.getHeight());
+	},
+	render: function(img, x,y){
 		this.canvas.putImageData(img, x || 0, y || 0);
+	},
+	nextFrame: function(renderFunc){
+		requestAnimationFrame(renderFunc);
 	},
 	
 	getColorAtIndex: function(img,i){
@@ -36,64 +107,35 @@ module.exports.prototype = {
 		this.setColorAtIndex(p,i,c);
 	},
 	
-	//--------------------------------------
-	
-	setColor: function(color){
-		if (!color) return;
-		var tmp = is_object(color) ? color : {fill: color, stroke: color};
-		if (tmp.stroke) this.canvas.strokeStyle = tmp.stroke;
-		if (tmp.fill) this.canvas.fillStyle = tmp.fill;
+	readyForPlaying: function(){
+		this.restart_btn.show();
 	},
-	
-	render: function(){
-		this.canvas.closePath();
-		this.canvas.stroke();
+	updateProgress: function(i, count){
+		this.bar.update(i);
+		this.updateCounter(i+'/'+count);
 	},
-	
-	drawLine: function(x1, y1, x2, y2, color, width){
-		this.setColor(color);
-		if (width) this.canvas.lineWidth = width;
-		if (this.canvas.params.render) this.canvas.beginPath();
-		
-		this.canvas.moveTo(x1+0.5, y1+0.5);
-		this.canvas.lineTo(x2+0.5, y2+0.5);
-		
-		if (this.canvas.params.render) this.render();
-	},
-	drawLineTo: function(x, y, init_x, init_y){
-		if (init_x) this.init_line_x = init_x;
-		if (init_y) this.init_line_y = init_y;
-		
-		this.drawLine(this.init_line_x, this.init_line_y, x, y);
-		
-		this.init_line_x = x;
-		this.init_line_y = y;
-	},
-	drawLines: function(lines){
-		var l;
-		for (var i in lines){
-			l = lines[i];
-			this.drawLine(l[0], l[1], l[2], l[3], l[4], l[5]);
-		}
-	},
-	drawRect: function(x1, y1, x2, y2, color){
-		this.setColor(color);
-		if (this.canvas.params.render) this.canvas.beginPath();
-		
-		this.canvas.fillRect(x1+0.5, y1+0.5, x2+0.5, y2+0.5);
-		
-		if (this.canvas.params.render) this.render();
-	},
-	drawText: function(text, x, y, font, color){
-		this.setColor(color);
-		if (font) this.canvas.font = font;
-		this.canvas.fillText(text, x, y);
-	},
-	drawTexts: function(texts){
-		var t;
-		for (var i in texts){
-			t = texts[i];
-			this.drawText(t[0], t[1], t[2], t[3], t[4]);
-		}
+	updateCounter: function(i){
+		this.counter.update(i);
 	}
 };
+
+addEvent(document, 'DOMContentLoaded', function(){
+	var width = global.innerWidth/2 >> 0;
+	var height = global.innerHeight/2 >> 0;
+	
+	var app = new App({
+		renderer: new Canvas('canvas', width, height)
+	});
+	
+	app.renderer.initComponents({
+		'bar':			new components.Bar('bar', app.frames_count),
+		'counter':		new components.Element('counter'),
+		'restart_btn':	new components.Button('restart', function(){app.restart()})
+	});
+	app.renderer.addEvent('mousedown', () => {app.timer ? app.stop() : app.resume()});
+	
+	app.calc({
+		width: width,
+		height: height
+	});
+});

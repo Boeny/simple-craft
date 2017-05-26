@@ -97,6 +97,9 @@ global.vort = function(v, direction, ret){
 	v.x = direction*v.y;
 	v.y = -direction*tmp;
 };
+global.vdot = function(v1, v2){
+	return v1.x*v2.x + v1.y*v2.y;
+};
 global.tov = function(v){
 	return is_object(v) ? v : vuno(v);
 };
