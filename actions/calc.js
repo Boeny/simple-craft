@@ -14,7 +14,7 @@ module.exports = {
 	radius: 100,
 	
 	mass: 0,
-	collision_distance: 0.5,
+	collision_distance: 1.5,
 	temp_color_inc: 30,
 	outer_mult: 0.0005,
 	
@@ -74,7 +74,7 @@ module.exports = {
 			this.points.push({
 				x: p.x,
 				y: p.y,
-				speed: vset(vort(vsub(p, this.size2, true), 1, true), random(-1,3), true),//vuno(0),
+				speed: vuno(0),//vset(vort(vsub(p, this.size2, true), 1, true), random(-1,3), true),//
 				restore: 0.8
 			});
 			
